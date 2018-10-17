@@ -3,9 +3,11 @@ package app.service;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -89,7 +91,7 @@ public class DataService {
     public boolean updateBaseDiff(String num, String open_id, String account_id, String stocks_code) {
         String sql = "update stocks_list t set t.base_diff=? where opne_id=? and account_id=? and  stocks_code=?";
 
-        return jdbcTemplate.update(sql,num,open_id,account_id,stocks_code)>0;
+        return jdbcTemplate.update(sql, num, open_id, account_id, stocks_code) > 0;
     }
 
     //十日内无查询数据代码 删除
@@ -104,27 +106,30 @@ public class DataService {
     //获取未过期的
     public Map<String, Object> getToken(String appid, String appsecret) {
         String sql = "select appid, appsecret, token, expiresin, expiresdate from weixin_token where appid=? and appsecret=? and expiresdate>now() order by add_date desc limit 1";
-        return jdbcTemplate.queryForMap(sql);
+        try {
+            return jdbcTemplate.queryForMap(sql, appid, appsecret);
+        } catch (EmptyResultDataAccessException e) {
+            return new HashMap<>();
+        }
     }
 
     //设置token过期
     public boolean setTokenExpiresd(String appid, String appsecret) {
         String sql = "update weixin_token set expiresdate=now()-(1/24/60) where appid=? and appsecret=?  and expiresdate>now() ";
-        return jdbcTemplate.update(sql, appid, appsecret)>0;
+        return jdbcTemplate.update(sql, appid, appsecret) > 0;
     }
 
     public boolean insertToken(String appid, String appsecret, String token, String expiresin, String expiresdate) {
         log.info("save token to db......");
         String sql = "insert into weixin_token   (appid, appsecret, token, expiresin, expiresdate) values (?,?,?,?,?)";
 
-        return jdbcTemplate.update(sql,appid,appsecret,token,expiresin,expiresdate)>0;
+        return jdbcTemplate.update(sql, appid, appsecret, token, expiresin, expiresdate) > 0;
     }
-
 
 
     public boolean insertMessage(String open_id, String user, String message, String res) {
         String sql = "insert into weixin_message ( to_open_id, to_user, message,send_res, send_time, message_id) values (?,?,?,?,now(),?)";
-        return jdbcTemplate.update(sql,open_id,user,message,res)>0;
+        return jdbcTemplate.update(sql, open_id, user, message, res) > 0;
     }
 
    /*public List<Map<String, String>> getBlackList() {

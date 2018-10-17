@@ -1,7 +1,6 @@
 package app.service;
 
 import app.pojo.AccessToken;
-import app.util.AccessTokenUtil;
 import app.util.Content;
 import app.util.ErrorInfo;
 import app.util.Message;
@@ -27,12 +26,12 @@ public class MessageSend {
 	private DataService dataService;
 
 	@Autowired
-	private	 AccessTokenUtil accessTokenUtil;
+	private	 AccessTokenService accessTokenService;
 	@Autowired
 	private RestTemplate restTemplate;
 
 	public synchronized ErrorInfo SendMessage(String message, String msgtype, String openId, boolean resend) {
-		AccessToken accessToken= accessTokenUtil.getSingleAccessToken();
+		AccessToken accessToken= accessTokenService.getSingleAccessToken();
 		if(accessToken==null){
 			System.out.println("get token failed......");
 			dataService.insertErrorInfo("com.zhx.weixin.service.MessageSend", "SendMessage", "get token failed......");
@@ -48,8 +47,8 @@ public class MessageSend {
 		dataService.insertMessage(openId, UserMapUtil.userMap.get(openId), message, JSON.toJSONString(errorInfo));
 		//如果token失效 清空内存中的token,将数据库token设置为过期,消息重发
 		if("40001".equals(errorInfo.getErrcode())){
-			AccessTokenUtil.setAccessToken(null);
-			dataService.setTokenExpiresd(AccessTokenUtil.getAppid(),AccessTokenUtil.getAppsecret());
+			accessTokenService.setAccessToken(null);
+			dataService.setTokenExpiresd(accessTokenService.getAppid(),accessTokenService.getAppsecret());
 			if(resend){
 				ErrorInfo resendInfo=this.SendMessage(openId, msgtype, message,false);
 				if(!"0".equals(resendInfo.getErrcode())){
