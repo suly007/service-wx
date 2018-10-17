@@ -26,8 +26,11 @@ import java.util.Random;
 public class CoreService {
     //static DBServiceBO dbService = new DBServiceBO();
     static String baseURL = "http://hq.sinajs.cn/";
-    @Autowired
-    private Monitor monitor ;
+
+    private Monitor monitor;
+
+    private DataService dataService;
+
     static Random r = new Random();
     public final static Map<String, String> messageMap = new HashMap<String, String>();
 
@@ -36,6 +39,11 @@ public class CoreService {
         messageMap.put("Manual", "回复“股票代码“查股价\n回复#查询自选股行情\n回复##查询圈共享股行情\n回复“+股票代码“增加自选股\n回复“-(.)股票代码“删除自选股\n回复“-(.)#“删除全部自选股");
     }
 
+    @Autowired
+    public CoreService(Monitor monitor, DataService dataService) {
+        this.monitor = monitor;
+        this.dataService = dataService;
+    }
 
     /**
      * 处理微信发来的请求
@@ -78,51 +86,51 @@ public class CoreService {
                 respContent.append("未能解析发送内容");
             } else if ("Message".equals(actionType)) {
                 respContent.append(messageMap.get(action));
-            }else if ("SinaStock".equals(actionType)) {
-				respContent.append(ProcessStocks(action));
-			}/*else if("AddStock".equals(actionType)){
-				respContent.append(addCodeByUser(action, fromUserName, toUserName));
-			}else if("DelStock".equals(actionType)){
-				respContent.append(delCodeByUser(action, fromUserName, toUserName));
-			}else if("DelAllStock".equals(actionType)){
+            } else if ("SinaStock".equals(actionType)) {
+                respContent.append(ProcessStocks(action));
+            } else if ("AddStock".equals(actionType)) {
+                respContent.append(addCodeByUser(action, fromUserName, toUserName));
+            } else if ("DelStock".equals(actionType)) {
+                respContent.append(delCodeByUser(action, fromUserName, toUserName));
+            }else if("DelAllStock".equals(actionType)){
 				respContent.append(delAllByUser(action, fromUserName, toUserName));
 			}else if("ChgBaseDiff".equals(actionType)){
 				respContent.append(chgBaseDiffByUser(action, fromUserName, toUserName));
-			}*/
+			}
 
             textMessage.setContent(respContent.toString());
             respMessage = MessageUtil.textMessageToXml(textMessage);
-            log.info("返回给用户的消息:{}",respMessage);
+            log.info("返回给用户的消息:{}", respMessage);
         } catch (Exception e) {
-            log.error("处理微信post请求失败,",e);
+            log.error("处理微信post请求失败,", e);
         }
 
         return respMessage;
     }
 
-	/*public static String addCodeByUser(String content, String open_id, String account_id) {
-		String resulet="未找到相关数据或解析出错!";
-		if (content != null && content.length() == 10 && content.charAt(0) == 's') {
-			String stocks_code = content.replace("s_sh", "").replace("s_sz", "");
-			if (stocks_code.length() == 6) {
-				if (dbService.notExist(stocks_code, open_id, account_id)) {
-					if(dbService.insertData(stocks_code, content, open_id, account_id)){
-						resulet="操作成功!";
-					}
-				}else{
-					resulet="相关代码已经存在,无需重复添加!";
-				}
-			}
-		}
-		return resulet;
-	}*/
+    public String addCodeByUser(String content, String open_id, String account_id) {
+        String resulet = "未找到相关数据或解析出错!";
+        if (content != null && content.length() == 10 && content.charAt(0) == 's') {
+            String stocks_code = content.replace("s_sh", "").replace("s_sz", "");
+            if (stocks_code.length() == 6) {
+                if (dataService.notExist(stocks_code, open_id, account_id)) {
+                    if (dataService.insertData(stocks_code, content, open_id, account_id)) {
+                        resulet = "操作成功!";
+                    }
+                } else {
+                    resulet = "相关代码已经存在,无需重复添加!";
+                }
+            }
+        }
+        return resulet;
+    }
 
-    /*public static String delCodeByUser(String content, String open_id, String account_id) {
+    public String delCodeByUser(String content, String open_id, String account_id) {
         String resulet="未找到相关数据或解析出错!";
         if (content != null && content.length() == 10 && content.charAt(0) == 's') {
             String stocks_code = content.replace("s_sh", "").replace("s_sz", "");
             if (stocks_code.length() == 6) {
-                if (dbService.delExist(stocks_code, open_id, account_id)) {
+                if (dataService.delExist(stocks_code, open_id, account_id)) {
                     resulet="操作成功!";
                 }
             }
@@ -130,35 +138,35 @@ public class CoreService {
         return resulet;
     }
 
-    public static String delAllByUser(String content, String open_id, String account_id) {
+    public String delAllByUser(String content, String open_id, String account_id) {
         String resulet = "未找到相关数据或解析出错!";
-        if (dbService.delAllExist(open_id, account_id)) {
+        if (dataService.delAllExist(open_id, account_id)) {
             resulet = "操作成功!";
         }
         return resulet;
     }
 
-    public static String chgBaseDiffByUser(String content, String open_id, String account_id) {
+    public String chgBaseDiffByUser(String content, String open_id, String account_id) {
         String resulet = "未找到相关数据或解析出错!";
-        if (dbService.chgBaseDiffByUser(open_id, account_id)) {
+        if (dataService.chgBaseDiffByUser(open_id, account_id)) {
             resulet = "操作成功!";
         }
         return resulet;
-    }*/
+    }
     //根据open_id获取自选股列表
-	/*public static String getStocksListStr(String open_id) {
-		String stocksListStr = dbService.getStockListStrByOpenID(open_id);
+	public String getStocksListStr(String open_id) {
+		String stocksListStr = dataService.getStockListStrByOpenID(open_id);
 		if (stocksListStr == null || stocksListStr.length() < 9) {
-			stocksListStr = dbService.getStockListStr();
+			stocksListStr = dataService.getStockListStr();
 		}
 		return stocksListStr;
 	}
 	
 	//根据open_id获取自选股列表
-	public static String getStocksListStr() {
-		return dbService.getStockListStr();
+	public String getStocksListStr() {
+		return dataService.getStockListStr();
 	}
-*/
+
     public Map<String, String> ProcessContent(String content, String msgType, String fromUserName) {
         Map<String, String> resMap = new HashMap<String, String>();
         String actionType = "";
@@ -172,10 +180,10 @@ public class CoreService {
                 action = content;
             } else if ("zx".equalsIgnoreCase(content) || "#".contentEquals(content)) {
                 actionType = "SinaStock";
-                //action=getStocksListStr(fromUserName);
+                action=getStocksListStr(fromUserName);
             } else if ("all".equalsIgnoreCase(content) || "##".endsWith(content)) {
                 actionType = "SinaStock";
-                //action=getStocksListStr();
+                action=getStocksListStr();
             } else if (".#".equals(content) || ("-#".equals(content))) {
                 actionType = "DelAllStock";
                 action = content;
@@ -217,82 +225,82 @@ public class CoreService {
         return resMap;
     }
 
-	public String ProcessStocks(String action) {
-		// 默认返回的文本消息内容
-		StringBuilder respContent = new StringBuilder();
-		StringBuilder url = new StringBuilder();
-		url.append(baseURL);
-		url.append("rn=");
-		url.append(r.nextLong());
-		url.append("&list=");
-		url.append(action);
-		Map<String, Stocks> currentInfo = monitor.getCurrentInfo(url.toString());//sortMapByValue(monitor.getCurrentInfo(url.toString()));
-		int count=currentInfo.keySet().size();
-		for (String key : currentInfo.keySet()) {
-			Stocks s = currentInfo.get(key);
-			if (count > 1) {
-				double percent=s.getChgpercent();
-				String space;
-				String percentStr;
-				if(percent>=0){
-					space="-";//"↑";
-					percentStr="+"+percent;
-				}else{
-					space="-";//"↓";
-					percentStr=String.valueOf(percent);
-				}
-				respContent.append(" <a href=\"http://image.sinajs.cn/newchart/min/n/");
-				respContent.append(key.replace("s_", ""));
-				respContent.append(".gif\" >");
-				String name=s.getName().replace(" ", "");
-				for (int i = 0; i < 8 - name.getBytes().length; i++) {
-					respContent.append(space);
-				}
-				respContent.append(name);
+    public String ProcessStocks(String action) {
+        // 默认返回的文本消息内容
+        StringBuilder respContent = new StringBuilder();
+        StringBuilder url = new StringBuilder();
+        url.append(baseURL);
+        url.append("rn=");
+        url.append(r.nextLong());
+        url.append("&list=");
+        url.append(action);
+        Map<String, Stocks> currentInfo = monitor.getCurrentInfo(url.toString());//sortMapByValue(monitor.getCurrentInfo(url.toString()));
+        int count = currentInfo.keySet().size();
+        for (String key : currentInfo.keySet()) {
+            Stocks s = currentInfo.get(key);
+            if (count > 1) {
+                double percent = s.getChgpercent();
+                String space;
+                String percentStr;
+                if (percent >= 0) {
+                    space = "-";//"↑";
+                    percentStr = "+" + percent;
+                } else {
+                    space = "-";//"↓";
+                    percentStr = String.valueOf(percent);
+                }
+                respContent.append(" <a href=\"http://image.sinajs.cn/newchart/min/n/");
+                respContent.append(key.replace("s_", ""));
+                respContent.append(".gif\" >");
+                String name = s.getName().replace(" ", "");
+                for (int i = 0; i < 8 - name.getBytes().length; i++) {
+                    respContent.append(space);
+                }
+                respContent.append(name);
 
-				respContent.append("</a>");
-				String price = String.valueOf(s.getPrice());
-				respContent.append("  ");
-				respContent.append(s.getPrice());
-				for (int i = 0; i < 6 - price.getBytes().length; i++) {
-					respContent.append("0");
-				}
-				respContent.append(",");
-				respContent.append("  ");
-				respContent.append(percentStr);
-				for (int i = 0; i < 6 - percentStr.getBytes().length; i++) {
-					respContent.append("0");
-				}
-				respContent.append("%\n");
-			} else if (count == 1) {
-				respContent.append(s.getName());
-				respContent.append("(");
-				respContent.append(s.getCode());
-				respContent.append(")");
-				respContent.append("\n价格:");
-				respContent.append(s.getPrice());
-				respContent.append(",涨幅:");
-				respContent.append(s.getChgpercent());
-				respContent.append("%\n");
-				respContent.append(" <a href=\"http://image.sinajs.cn/newchart/min/n/");
-				respContent.append(key.replace("s_", ""));
-				respContent.append(".gif\" >分时</a>");
+                respContent.append("</a>");
+                String price = String.valueOf(s.getPrice());
+                respContent.append("  ");
+                respContent.append(s.getPrice());
+                for (int i = 0; i < 6 - price.getBytes().length; i++) {
+                    respContent.append("0");
+                }
+                respContent.append(",");
+                respContent.append("  ");
+                respContent.append(percentStr);
+                for (int i = 0; i < 6 - percentStr.getBytes().length; i++) {
+                    respContent.append("0");
+                }
+                respContent.append("%\n");
+            } else if (count == 1) {
+                respContent.append(s.getName());
+                respContent.append("(");
+                respContent.append(s.getCode());
+                respContent.append(")");
+                respContent.append("\n价格:");
+                respContent.append(s.getPrice());
+                respContent.append(",涨幅:");
+                respContent.append(s.getChgpercent());
+                respContent.append("%\n");
+                respContent.append(" <a href=\"http://image.sinajs.cn/newchart/min/n/");
+                respContent.append(key.replace("s_", ""));
+                respContent.append(".gif\" >分时</a>");
 
-				respContent.append(" <a href=\"http://image.sinajs.cn/newchart/daily/n/");
-				respContent.append(key.replace("s_", ""));
-				respContent.append(".gif\" > 日K</a>");
-				respContent.append(" <a href=\"http://image.sinajs.cn/newchart/weekly/n/");
-				respContent.append(key.replace("s_", ""));
-				respContent.append(".gif\" > 周K</a>");
+                respContent.append(" <a href=\"http://image.sinajs.cn/newchart/daily/n/");
+                respContent.append(key.replace("s_", ""));
+                respContent.append(".gif\" > 日K</a>");
+                respContent.append(" <a href=\"http://image.sinajs.cn/newchart/weekly/n/");
+                respContent.append(key.replace("s_", ""));
+                respContent.append(".gif\" > 周K</a>");
 
-				respContent.append(" <a href=\"http://image.sinajs.cn/newchart/monthly/n/");
-				respContent.append(key.replace("s_", ""));
-				respContent.append(".gif\" > 月K</a>");
+                respContent.append(" <a href=\"http://image.sinajs.cn/newchart/monthly/n/");
+                respContent.append(key.replace("s_", ""));
+                respContent.append(".gif\" > 月K</a>");
 
-			}
-		}
-		return respContent.toString();
-	}
+            }
+        }
+        return respContent.toString();
+    }
 
 
     public static String processStockCode(String Content) {
