@@ -1,12 +1,14 @@
 package app.service;
 
 import app.message.resp.TextMessage;
+import app.pojo.Stocks;
 import app.util.MessageUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,10 +22,12 @@ import java.util.Random;
  * @date 2013-05-20
  */
 @Slf4j
+@Service
 public class CoreService {
     //static DBServiceBO dbService = new DBServiceBO();
     static String baseURL = "http://hq.sinajs.cn/";
-    //static Monitor monitor = new Monitor();
+    @Autowired
+    private Monitor monitor ;
     static Random r = new Random();
     public final static Map<String, String> messageMap = new HashMap<String, String>();
 
@@ -39,7 +43,7 @@ public class CoreService {
      * @param request
      * @return
      */
-    public static String processRequest(HttpServletRequest request) {
+    public String processRequest(HttpServletRequest request) {
         String respMessage = null;
         try {
             StringBuilder respContent = new StringBuilder();
@@ -155,7 +159,7 @@ public class CoreService {
 		return dbService.getStockListStr();
 	}
 */
-    public static Map<String, String> ProcessContent(String content, String msgType, String fromUserName) {
+    public Map<String, String> ProcessContent(String content, String msgType, String fromUserName) {
         Map<String, String> resMap = new HashMap<String, String>();
         String actionType = "";
         String action = "";
@@ -213,7 +217,7 @@ public class CoreService {
         return resMap;
     }
 
-	public static String ProcessStocks(String action) {
+	public String ProcessStocks(String action) {
 		// 默认返回的文本消息内容
 		StringBuilder respContent = new StringBuilder();
 		StringBuilder url = new StringBuilder();
@@ -222,7 +226,7 @@ public class CoreService {
 		url.append(r.nextLong());
 		url.append("&list=");
 		url.append(action);
-		Map<String, Stocks> currentInfo =sortMapByValue(monitor.getCurrentInfo(url.toString()));
+		Map<String, Stocks> currentInfo = monitor.getCurrentInfo(url.toString());//sortMapByValue(monitor.getCurrentInfo(url.toString()));
 		int count=currentInfo.keySet().size();
 		for (String key : currentInfo.keySet()) {
 			Stocks s = currentInfo.get(key);
@@ -302,12 +306,12 @@ public class CoreService {
     }
 	
 	
-    /*public static Map<String, Stocks> sortMapByValue(Map<String, Stocks> oriMap) {
+    /*public Map<String, Stocks> sortMapByValue(Map<String, Stocks> oriMap) {
         if (oriMap == null || oriMap.isEmpty()) {
             return null;
         }
         Map<String, Stocks> sortedMap = new LinkedHashMap<String, Stocks>();
-        List<Entry<String, Stocks>> entryList = new ArrayList<Entry<String, Stocks>>(
+        List<Entry<String, Stocks>> entryList = new ArrayList<Map.Entry<String, Stocks>>(
                 oriMap.entrySet());
         Collections.sort(entryList, new Comparator(){
 			public int compare(Object o1, Object o2) {

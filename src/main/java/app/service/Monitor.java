@@ -1,10 +1,15 @@
 package app.service;
 
+import app.pojo.Stocks;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.MapUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -12,21 +17,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import com.zhx.weixin.bean.Stocks;
-
+@Service
+@Slf4j
 public class Monitor extends Thread{
 	//private String account_id="gh_ac538db20ea9";//正式号dgtz
 	private String account_id="gh_69fae8b89eb0";//测试
-	private DBServiceBO ds = new DBServiceBO();
-	private List<Map<String, String>> stockMapListChg = ds.getStockMapListByAccountIdChg(account_id);
-	private List<Map<String, String>> stockMapListComp = ds.getStockMapListByAccountIdComp(account_id);
-	private List<Map<String, String>> blackMapList=ds.getBlackList();
-	private String stockListStr = ds.getStockListStr();
+
+	private DataService dataService;
+	private List<Map<String, Object>> stockMapListChg ;
+	private List<Map<String, Object>> stockMapListComp;
+	//private List<Map<String, String>> blackMapList=dataService.getBlackList();
+	private String stockListStr;
 	private String baseURL = "http://hq.sinajs.cn/";
 	private MessageSend ms=new MessageSend();
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	private static final java.text.DecimalFormat df = new java.text.DecimalFormat("#.00");
 
+	@Autowired
+	public Monitor(DataService dataService){
+		this.dataService=dataService;
+		stockMapListChg = dataService.getStockMapListByAccountIdChg(account_id);
+		stockMapListComp = dataService.getStockMapListByAccountIdComp(account_id);
+		stockListStr = dataService.getStockListStr();
+	}
+
+
+	@Override
 	public void run(){
 		int times = 0;
 
@@ -37,15 +53,13 @@ public class Monitor extends Thread{
 			int hour=now.getHours();
 			if(hour<9||hour>15){
 				try {
-					DBServiceBO ds=new DBServiceBO();
-					ds.dataInit();
-					ds.delData();
+					dataService.dataInit();
+					dataService.delData();
 					
 					Thread.sleep(1000*60*30);
 					continue;
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					log.error("中断异常",e);
 				}
 			}
 			StringBuilder url=new StringBuilder();
@@ -133,11 +147,11 @@ public class Monitor extends Thread{
 		System.out.println("reLoadList......");
 		stockMapListComp.clear();
 		stockMapListChg.clear();	
-		blackMapList.clear();
-		stockMapListChg = ds.getStockMapListByAccountIdChg(account_id);
-		stockMapListComp = ds.getStockMapListByAccountIdComp(account_id);
-		blackMapList=ds.getBlackList();
-		stockListStr = ds.getStockListStr();
+		//blackMapList.clear();
+		stockMapListChg = dataService.getStockMapListByAccountIdChg(account_id);
+		stockMapListComp = dataService.getStockMapListByAccountIdComp(account_id);
+		//blackMapList=ds.getBlackList();
+		stockListStr = dataService.getStockListStr();
 		if(stockListStr==null||stockListStr.length()<=0){
 			flag=false;
 		}
@@ -149,12 +163,12 @@ public class Monitor extends Thread{
 			StringBuilder msg = new StringBuilder();
 			msg.append(sdf.format(new Date()));
 			msg.append("\n");
-			Map<String, String> stockMap = stockMapListChg.get(i);
-			String stocks_id = stockMap.get("stocks_id");
-			String stocks_alias = stockMap.get("stocks_alias");
-			double change_min = Double.valueOf(stockMap.get("change_min"));
-			double change_max = Double.valueOf(stockMap.get("change_max"));
-			String open_id=stockMap.get("open_id");
+			Map<String, Object> stockMap = stockMapListChg.get(i);
+			String stocks_id = MapUtils.getString(stockMap,"stocks_id");
+			String stocks_alias = MapUtils.getString(stockMap,"stocks_alias");
+			double change_min = MapUtils.getDouble(stockMap,"change_min");
+			double change_max = MapUtils.getDouble(stockMap,"change_max");
+			String open_id=  MapUtils.getString(stockMap,"open_id");
 			Stocks stocks = currentInfo.get(stocks_alias);		
 			if (stocks.getChgpercent() < change_min) {
 				// 发送跌幅提示
@@ -182,7 +196,7 @@ public class Monitor extends Thread{
 				msg.append(stocks_alias.replace("s_", ""));
 				msg.append(".gif\" > 月K</a>");
 				ms.SendMessage(msg.toString(),"text", open_id,true);
-				if (ds.updateChange(stocks_id,"-")&&reLoadList()) {
+				if (dataService.updateChange(stocks_id,"-")&&reLoadList()) {
 					System.out.println("data process success....");
 				} else {
 					System.out.println("data process failed....");
@@ -215,7 +229,7 @@ public class Monitor extends Thread{
 				msg.append(stocks_alias.replace("s_", ""));
 				msg.append(".gif\" > 月K</a>");
 				ms.SendMessage(msg.toString(),"text", open_id,true);
-				if (ds.updateChange(stocks_id,"+")&&reLoadList()) {
+				if (dataService.updateChange(stocks_id,"+")&&reLoadList()) {
 					System.out.println("data process success....");
 				} else {
 					System.out.println("data process failed....");
@@ -230,11 +244,11 @@ public class Monitor extends Thread{
 			StringBuilder msg = new StringBuilder();
 			msg.append(sdf.format(new Date()));
 			msg.append("\n");
-			Map<String, String> stockMap = stockMapListComp.get(i);
-			String stocks_id = stockMap.get("stocks_id");
-			String stocks_alias = stockMap.get("stocks_alias");
-			String stocks_alias_comp = stockMap.get("stocks_alias_comp");
-			String open_id=stockMap.get("open_id");
+			Map<String, Object> stockMap = stockMapListComp.get(i);
+			String stocks_id = MapUtils.getString(stockMap,"stocks_id");
+			String stocks_alias = MapUtils.getString(stockMap,"stocks_alias");
+			String stocks_alias_comp = MapUtils.getString(stockMap,"stocks_alias_comp");
+			String open_id=MapUtils.getString(stockMap,"open_id");
 			Stocks stocks = currentInfo.get(stocks_alias);
 			Stocks stocks_comp = currentInfo.get(stocks_alias_comp);
 		
@@ -243,17 +257,13 @@ public class Monitor extends Thread{
 				continue;
 			}			
 			// 差异提示处理
-			double base_diff = Double.valueOf(stockMap.get("base_diff"));
-			double diff_range = Double.valueOf(stockMap.get("diff_range"));
+			double base_diff = MapUtils.getDouble(stockMap,"base_diff");
+			double diff_range = MapUtils.getDouble(stockMap,"diff_range");
 			boolean diff_warn_flag = true;
 			Date diff_warn_time=null;
-			try {
-				diff_warn_time = sdf.parse(stockMap.get("diff_warn_time"));
-			} catch (ParseException e) {
-				e.printStackTrace();
-			}
+			diff_warn_time = (Date)MapUtils.getObject(stockMap,"diff_warn_time");
 			//System.out.println("diff_warn_time:"+sdf.format(diff_warn_time));
-			long minutes = (new Date().getTime() - diff_warn_time.getTime()) / (1000 * 60);
+			long minutes = (System.currentTimeMillis() - diff_warn_time.getTime()) / (1000 * 60);
 			// 小于5分钟不进行差异提示
 			if (minutes < 5) {
 				diff_warn_flag = false;
@@ -293,7 +303,7 @@ public class Monitor extends Thread{
 						msg.append(stocks_comp.getChgpercent());
 						msg.append("% \n");
 						ms.SendMessage(msg.toString(),"text", open_id,true);
-						if (ds.updateDiffWarnTime(stocks_id,"+")&&reLoadList()) {
+						if (dataService.updateDiffWarnTime(stocks_id,"+")&&reLoadList()) {
 							System.out.println("data process success....");
 						} else {
 							System.out.println("data process failed....");
@@ -330,7 +340,7 @@ public class Monitor extends Thread{
 						msg.append(stocks.getChgpercent());
 						msg.append("%\n");
 						ms.SendMessage(msg.toString(),"text", open_id,true);
-						if (ds.updateDiffWarnTime(stocks_id,"-")&&reLoadList()) {
+						if (dataService.updateDiffWarnTime(stocks_id,"-")&&reLoadList()) {
 							System.out.println("data process success....");			
 						} else {
 							System.out.println("data process failed....");
