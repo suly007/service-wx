@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -20,8 +21,8 @@ import java.util.Map;
 @Service
 @Slf4j
 public class Monitor extends Thread{
-	//private String account_id="gh_ac538db20ea9";//正式号dgtz
-	private String account_id="gh_69fae8b89eb0";//测试
+	@Value("${weixin.appid}")
+	private String appid;
 
 	private DataService dataService;
 	private List<Map<String, Object>> stockMapListChg ;
@@ -31,15 +32,17 @@ public class Monitor extends Thread{
 	private String baseURL = "http://hq.sinajs.cn/";
 
 	private MessageSend ms=new MessageSend();
-	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+	private SimpleDateFormat simpleDateFormat ;
 	private static final java.text.DecimalFormat df = new java.text.DecimalFormat("#.00");
 
 
 	@Autowired
-	public Monitor(DataService dataService){
+	public Monitor(DataService dataService,SimpleDateFormat simpleDateFormat){
 		this.dataService=dataService;
-		stockMapListChg = dataService.getStockMapListByAccountIdChg(account_id);
-		stockMapListComp = dataService.getStockMapListByAccountIdComp(account_id);
+		this.simpleDateFormat =simpleDateFormat;
+		stockMapListChg = dataService.getStockMapListByAppidChg(appid);
+		stockMapListComp = dataService.getStockMapListByAppidComp(appid);
 		stockListStr = dataService.getStockListStr();
 	}
 
@@ -121,8 +124,8 @@ public class Monitor extends Thread{
 		stockMapListComp.clear();
 		stockMapListChg.clear();	
 		//blackMapList.clear();
-		stockMapListChg = dataService.getStockMapListByAccountIdChg(account_id);
-		stockMapListComp = dataService.getStockMapListByAccountIdComp(account_id);
+		stockMapListChg = dataService.getStockMapListByAppidChg(appid);
+		stockMapListComp = dataService.getStockMapListByAppidComp(appid);
 		//blackMapList=ds.getBlackList();
 		stockListStr = dataService.getStockListStr();
 		if(stockListStr==null||stockListStr.length()<=0){
@@ -139,7 +142,7 @@ public class Monitor extends Thread{
 	public void processChg(Map<String, Stocks>  currentInfo){
 		for (int i = 0; i < stockMapListChg.size(); i++) {
 			StringBuilder msg = new StringBuilder();
-			msg.append(sdf.format(new Date()));
+			msg.append(simpleDateFormat.format(new Date()));
 			msg.append("\n");
 			Map<String, Object> stockMap = stockMapListChg.get(i);
 			String stocks_id = MapUtils.getString(stockMap,"stocks_id");
@@ -225,7 +228,7 @@ public class Monitor extends Thread{
 	public void processComp(Map<String, Stocks>  currentInfo){
 		for(int i = 0; i < stockMapListComp.size(); i++) {
 			StringBuilder msg = new StringBuilder();
-			msg.append(sdf.format(new Date()));
+			msg.append(simpleDateFormat.format(new Date()));
 			msg.append("\n");
 			Map<String, Object> stockMap = stockMapListComp.get(i);
 			String stocks_id = MapUtils.getString(stockMap,"stocks_id");

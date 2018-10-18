@@ -25,15 +25,15 @@ public class DataService {
 //		return _dao.query(param);
 //	}
     //通过公众号，获取用户查询过的代码列表信息
-    public List<Map<String, Object>> getStockMapListByAccountIdChg(String account_id) {
-        String sql = "select stocks_code, stocks_alias, stocks_code_comp, stocks_alias_comp, base_diff, ifnull(diff_warn_time,now()) diff_warn_time, diff_range, change_min, change_min_flag, change_max, change_max_flag, stocks_id, open_id, add_userid, add_date, modify_userid, modify_date from stocks_list where account_id=? and stocks_code_comp is null";
-        return jdbcTemplate.queryForList(sql, account_id);
+    public List<Map<String, Object>> getStockMapListByAppidChg(String appid) {
+        String sql = "select stocks_code, stocks_alias, stocks_code_comp, stocks_alias_comp, base_diff, ifnull(diff_warn_time,now()) diff_warn_time, diff_range, change_min, change_min_flag, change_max, change_max_flag, stocks_id, open_id, add_userid, add_date, modify_userid, modify_date from stocks_list where appid=? and stocks_code_comp is null";
+        return jdbcTemplate.queryForList(sql, appid);
     }
 
     //通过公众号，获取用户查询过的代码列表信息
-    public List<Map<String, Object>> getStockMapListByAccountIdComp(String account_id) {
-        String sql = "select stocks_code, stocks_alias, stocks_code_comp, stocks_alias_comp, base_diff, ifnull(diff_warn_time,now()) diff_warn_time, diff_range, change_min, change_min_flag, change_max, change_max_flag, stocks_id, open_id, add_userid, add_date, modify_userid, modify_date from stocks_list where account_id=? and stocks_code_comp is not null";
-        return jdbcTemplate.queryForList(sql, account_id);
+    public List<Map<String, Object>> getStockMapListByAppidComp(String appid) {
+        String sql = "select stocks_code, stocks_alias, stocks_code_comp, stocks_alias_comp, base_diff, ifnull(diff_warn_time,now()) diff_warn_time, diff_range, change_min, change_min_flag, change_max, change_max_flag, stocks_id, open_id, add_userid, add_date, modify_userid, modify_date from stocks_list where appid=? and stocks_code_comp is not null";
+        return jdbcTemplate.queryForList(sql, appid);
     }
 
     public String getStockListStr() {
@@ -51,9 +51,9 @@ public class DataService {
         return jdbcTemplate.update(sql, stocks_id) > 0;
     }
 
-    public boolean chgBaseDiffByUser(String open_id, String account_id) {
-        String sql = "update stocks_list set base_diff=next_base_diff where open_id=? and account_id=? and  (now()-diff_warn_time)*24*60<=5";
-        return jdbcTemplate.update(sql, open_id, account_id) > 0;
+    public boolean chgBaseDiffByUser(String open_id, String appid) {
+        String sql = "update stocks_list set base_diff=next_base_diff where open_id=? and appid=? and  (now()-diff_warn_time)*24*60<=5";
+        return jdbcTemplate.update(sql, open_id, appid) > 0;
     }
 
     public boolean updateChange(String stocks_id, String flag) {
@@ -67,31 +67,31 @@ public class DataService {
         return jdbcTemplate.update(sql);
     }
 
-    public boolean notExist(String stocks_code, String open_id, String account_id) {
-        String sql = "select 1 from  stocks_list where stocks_code=? and open_id=? and account_id=? and stocks_code_comp is null";
-        return jdbcTemplate.queryForList(sql, stocks_code, open_id, account_id).size() == 0;
+    public boolean notExist(String stocks_code, String open_id, String appid) {
+        String sql = "select 1 from  stocks_list where stocks_code=? and open_id=? and appid=? and stocks_code_comp is null";
+        return jdbcTemplate.queryForList(sql, stocks_code, open_id, appid).size() == 0;
     }
 
-    public boolean delExist(String stocks_code, String open_id, String account_id) {
-        String sql = "delete from  stocks_list where stocks_code=? and open_id=? and account_id=? and stocks_code_comp is null";
-        return jdbcTemplate.update(sql, stocks_code, open_id, account_id) > 0;
+    public boolean delExist(String stocks_code, String open_id, String appid) {
+        String sql = "delete from  stocks_list where stocks_code=? and open_id=? and appid=? and stocks_code_comp is null";
+        return jdbcTemplate.update(sql, stocks_code, open_id, appid) > 0;
     }
 
-    public boolean delAllExist(String open_id, String account_id) {
-        String sql = "delete from  stocks_list where open_id=? and account_id=? and stocks_code_comp is null";
-        return jdbcTemplate.update(sql, open_id, account_id) > 0;
+    public boolean delAllExist(String open_id, String appid) {
+        String sql = "delete from  stocks_list where open_id=? and appid=? and stocks_code_comp is null";
+        return jdbcTemplate.update(sql, open_id, appid) > 0;
     }
 
-    public boolean insertData(String stocks_code, String stocks_alias, String open_id, String account_id) {
-        String sql = "insert into stocks_list   (stocks_code, stocks_alias, open_id,account_id) values (?,?,?,?)";
-        return jdbcTemplate.update(sql, stocks_code, stocks_alias, open_id, account_id) > 0;
+    public boolean insertData(String stocks_code, String stocks_alias, String open_id, String appid) {
+        String sql = "insert into stocks_list   (stocks_code, stocks_alias, open_id,appid) values (?,?,?,?)";
+        return jdbcTemplate.update(sql, stocks_code, stocks_alias, open_id, appid) > 0;
     }
 
 
-    public boolean updateBaseDiff(String num, String open_id, String account_id, String stocks_code) {
-        String sql = "update stocks_list t set t.base_diff=? where opne_id=? and account_id=? and  stocks_code=?";
+    public boolean updateBaseDiff(String num, String open_id, String appid, String stocks_code) {
+        String sql = "update stocks_list t set t.base_diff=? where opne_id=? and appid=? and  stocks_code=?";
 
-        return jdbcTemplate.update(sql, num, open_id, account_id, stocks_code) > 0;
+        return jdbcTemplate.update(sql, num, open_id, appid, stocks_code) > 0;
     }
 
     //十日内无查询数据代码 删除

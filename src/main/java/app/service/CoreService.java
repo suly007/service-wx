@@ -108,13 +108,13 @@ public class CoreService {
         return respMessage;
     }
 
-    public String addCodeByUser(String content, String open_id, String account_id) {
+    public String addCodeByUser(String content, String open_id, String appid) {
         String resulet = "未找到相关数据或解析出错!";
         if (content != null && content.length() == 10 && content.charAt(0) == 's') {
             String stocks_code = content.replace("s_sh", "").replace("s_sz", "");
             if (stocks_code.length() == 6) {
-                if (dataService.notExist(stocks_code, open_id, account_id)) {
-                    if (dataService.insertData(stocks_code, content, open_id, account_id)) {
+                if (dataService.notExist(stocks_code, open_id, appid)) {
+                    if (dataService.insertData(stocks_code, content, open_id, appid)) {
                         resulet = "操作成功!";
                     }
                 } else {
@@ -125,12 +125,12 @@ public class CoreService {
         return resulet;
     }
 
-    public String delCodeByUser(String content, String open_id, String account_id) {
+    public String delCodeByUser(String content, String open_id, String appid) {
         String resulet="未找到相关数据或解析出错!";
         if (content != null && content.length() == 10 && content.charAt(0) == 's') {
             String stocks_code = content.replace("s_sh", "").replace("s_sz", "");
             if (stocks_code.length() == 6) {
-                if (dataService.delExist(stocks_code, open_id, account_id)) {
+                if (dataService.delExist(stocks_code, open_id, appid)) {
                     resulet="操作成功!";
                 }
             }
@@ -138,17 +138,17 @@ public class CoreService {
         return resulet;
     }
 
-    public String delAllByUser(String content, String open_id, String account_id) {
+    public String delAllByUser(String content, String open_id, String appid) {
         String resulet = "未找到相关数据或解析出错!";
-        if (dataService.delAllExist(open_id, account_id)) {
+        if (dataService.delAllExist(open_id, appid)) {
             resulet = "操作成功!";
         }
         return resulet;
     }
 
-    public String chgBaseDiffByUser(String content, String open_id, String account_id) {
+    public String chgBaseDiffByUser(String content, String open_id, String appid) {
         String resulet = "未找到相关数据或解析出错!";
-        if (dataService.chgBaseDiffByUser(open_id, account_id)) {
+        if (dataService.chgBaseDiffByUser(open_id, appid)) {
             resulet = "操作成功!";
         }
         return resulet;

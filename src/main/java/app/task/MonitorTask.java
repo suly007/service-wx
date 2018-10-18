@@ -20,7 +20,7 @@ import java.util.Map;
  */
 @Component
 @Slf4j
-@Profile({"test"})
+@Profile({"test","dev"})
 public class MonitorTask {
 
     @Autowired

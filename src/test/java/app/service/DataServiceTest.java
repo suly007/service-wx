@@ -31,11 +31,11 @@ public class DataServiceTest {
     }
 
     @Test
-    public void getStockMapListByAccountIdChg() {
+    public void getStockMapListByAppidChg() {
     }
 
     @Test
-    public void getStockMapListByAccountIdComp() {
+    public void getStockMapListByAppidComp() {
     }
 
     @Test
