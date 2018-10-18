@@ -96,7 +96,7 @@ public class DataService {
 
     //十日内无查询数据代码 删除
     public boolean delData() {
-        String delStocks = "delete from  stocks_list t where t.open_id in (select open_id from weixin_blacklist)";
+        String delStocks = "delete from  stocks_list where open_id in (select open_id from weixin_blacklist)";
         return jdbcTemplate.update(delStocks) > 0;
     }
 
