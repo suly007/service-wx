@@ -3,6 +3,7 @@ package app.service;
 import app.pojo.Stocks;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.RandomUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +16,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 @Service
 @Slf4j
@@ -29,9 +29,11 @@ public class Monitor extends Thread{
 	//private List<Map<String, String>> blackMapList=dataService.getBlackList();
 	private String stockListStr;
 	private String baseURL = "http://hq.sinajs.cn/";
+
 	private MessageSend ms=new MessageSend();
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	private static final java.text.DecimalFormat df = new java.text.DecimalFormat("#.00");
+
 
 	@Autowired
 	public Monitor(DataService dataService){
@@ -42,53 +44,24 @@ public class Monitor extends Thread{
 	}
 
 
+	//public void
+
+
 	@Override
 	public void run(){
-		int times = 0;
 
-		
-		Random r=new Random();
-		while (true) {		
-			Date now=new Date();
-			int hour=now.getHours();
-			if(hour<9||hour>15){
-				try {
-					dataService.dataInit();
-					dataService.delData();
-					
-					Thread.sleep(1000*60*30);
-					continue;
-				} catch (InterruptedException e) {
-					log.error("中断异常",e);
-				}
-			}
-			StringBuilder url=new StringBuilder();
-			url.append(baseURL);
-			url.append("rn=");
-			url.append(r.nextLong());
-			url.append("&list=");
-			url.append(stockListStr);
-			Map<String, Stocks> currentInfo = getCurrentInfo(url.toString());
-			//chg process
-			processChg(currentInfo);
-			//comp process
-			processComp(currentInfo);
-			times++;
-			//System.out.println(sdf.format(new Date())+" Monitor running ok....."+times);
-			if(times==10){
-				reLoadList();
-				//delBlack();
-				System.out.println(sdf.format(new Date())+" ok.....");
-				times=0;
-			}
-			try {
-				Thread.sleep(200);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}			
-		}
 
+	}
+
+
+	public Map<String, Stocks> getAllCurrentInfo(){
+		StringBuilder url=new StringBuilder();
+		url.append(baseURL);
+		url.append("rn=");
+		url.append(RandomUtils.nextLong());
+		url.append("&list=");
+		url.append(stockListStr);
+		return getCurrentInfo(url.toString());
 	}
 
 	public Map<String, Stocks> getCurrentInfo(String strUrl) {
@@ -157,7 +130,12 @@ public class Monitor extends Thread{
 		}
 		return flag;
 	}
-	
+
+	/**
+	 * 涨跌幅处理
+	 *
+	 * @param currentInfo
+	 */
 	public void processChg(Map<String, Stocks>  currentInfo){
 		for (int i = 0; i < stockMapListChg.size(); i++) {
 			StringBuilder msg = new StringBuilder();
@@ -238,7 +216,12 @@ public class Monitor extends Thread{
 			}
 		}
 	}
-	
+
+
+	/**
+	 * 对比处理
+	 * @param currentInfo
+	 */
 	public void processComp(Map<String, Stocks>  currentInfo){
 		for(int i = 0; i < stockMapListComp.size(); i++) {
 			StringBuilder msg = new StringBuilder();

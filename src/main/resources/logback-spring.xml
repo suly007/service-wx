@@ -52,8 +52,8 @@
     </appender>
     <!-- SQL相关日志输出-->
     <logger name="org.springframework" level="INFO" />
-    <logger name="org.springframework.jdbc.core.JdbcTemplate" level="DEBUG" />
-	<logger name="org.springframework.jdbc.core.StatementCreatorUtils" level="Trace" />
+<!--    <logger name="org.springframework.jdbc.core.JdbcTemplate" level="DEBUG" />
+	<logger name="org.springframework.jdbc.core.StatementCreatorUtils" level="Trace" />-->
 
     <logger name="org.hibernate.validator" level="INFO" />
     

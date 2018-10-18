@@ -62,9 +62,9 @@ public class DataService {
     }
 
 
-    public boolean dataInit() {
+    public int initData() {
         String sql = "update stocks_list set diff_warn_time=now()-1,change_max=2,change_min=-2 ";
-        return jdbcTemplate.update(sql) > 0;
+        return jdbcTemplate.update(sql);
     }
 
     public boolean notExist(String stocks_code, String open_id, String account_id) {
