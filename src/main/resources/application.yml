@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://118.25.227.182:4332/weixin
+    username: weixin
+    password: huan@weixin521
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: 15
+  profiles:
+    active: dev
+
+weixin:
+  appid: wx7175f9658e1378e3
+  appsecret: 1f2e0464967de3369a174855f76868aa
+
+  zabbix:
+    corpID: wwe86dd806f53d5ead
+    token: 7ZRhrY8
+    encodingAESKey: 9NCPNjdSQu9HGISQxl8gF65PGJqRzoohMHM5LlvsgOd

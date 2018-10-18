@@ -1,5 +1,6 @@
 package app.util;
 
+import app.message.corp.PassiveMessage;
 import app.message.resp.Article;
 import app.message.resp.MusicMessage;
 import app.message.resp.NewsMessage;
@@ -14,6 +15,7 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Writer;
 import java.util.HashMap;
@@ -121,6 +123,26 @@ public class MessageUtil {
 		return map;
 	}
 
+	public static Map<String, String> parseXml(String xmlStr) throws Exception {
+		// 将解析结果存储在HashMap中
+		Map<String, String> map = new HashMap<String, String>();
+
+		// 读取输入流
+		SAXReader reader = new SAXReader();
+		Document document = reader.read(new ByteArrayInputStream(xmlStr.getBytes("UTF-8")));
+		// 得到xml根元素
+		Element root = document.getRootElement();
+		// 得到根元素的所有子节点
+		List<Element> elementList = root.elements();
+
+		// 遍历所有子节点
+		for (Element e : elementList) {
+			map.put(e.getName(), e.getText());
+		}
+		return map;
+	}
+
+
 	/**
 	 * 文本消息对象转换成xml
 	 * 
@@ -131,6 +153,18 @@ public class MessageUtil {
 		xstream.alias("xml", textMessage.getClass());
 		return xstream.toXML(textMessage);
 	}
+
+	/**
+	 * 企业被动回复消息转xml
+	 *
+	 * @param passiveMessage 企业被动回复消息
+	 * @return xml
+	 */
+	public static String textMessageToXml(PassiveMessage passiveMessage) {
+		xstream.alias("xml", passiveMessage.getClass());
+		return xstream.toXML(passiveMessage);
+	}
+
 
 	/**
 	 * 音乐消息对象转换成xml
@@ -183,6 +217,8 @@ public class MessageUtil {
 						writer.write(text);
 					}
 				}
+
+
 			};
 		}
 	});
