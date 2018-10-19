@@ -3,6 +3,7 @@ package app.service;
 import app.pojo.AccessToken;
 import app.util.ErrorInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,11 +40,13 @@ public class MessageSendTest {
         Message message = new Message();
         message.setAgentid("1000002");
         message.setMsgtype("text");
-        message.setOpenId("XunQingDong1");
+        message.setOpenId("XunQingDong");
         message.setMessage("hi pan");
         message.setResend(true);
 
         ErrorInfo errorInfo= messageSend.SendMessage(message);
         log.info("ErrorInfo:{}",errorInfo);
+        Assert.assertEquals(errorInfo.getErrmsg(),"ok");
+        Assert.assertEquals(errorInfo.getInvaliduser(),"");
     }
 }

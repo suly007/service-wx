@@ -25,13 +25,13 @@ public class DataService {
 //		return _dao.query(param);
 //	}
     //通过公众号，获取用户查询过的代码列表信息
-    public List<Map<String, Object>> getStockMapListByAppidChg(String appid) {
+    public List<Map<String, Object>> getStockMapListByCorpIdChg(String appid) {
         String sql = "select stocks_code, stocks_alias, stocks_code_comp, stocks_alias_comp, base_diff, ifnull(diff_warn_time,now()) diff_warn_time, diff_range, change_min, change_min_flag, change_max, change_max_flag, stocks_id, open_id, add_userid, add_date, modify_userid, modify_date from stocks_list where appid=? and stocks_code_comp is null";
         return jdbcTemplate.queryForList(sql, appid);
     }
 
     //通过公众号，获取用户查询过的代码列表信息
-    public List<Map<String, Object>> getStockMapListByAppidComp(String appid) {
+    public List<Map<String, Object>> getStockMapListByCorpIdComp(String appid) {
         String sql = "select stocks_code, stocks_alias, stocks_code_comp, stocks_alias_comp, base_diff, ifnull(diff_warn_time,now()) diff_warn_time, diff_range, change_min, change_min_flag, change_max, change_max_flag, stocks_id, open_id, add_userid, add_date, modify_userid, modify_date from stocks_list where appid=? and stocks_code_comp is not null";
         return jdbcTemplate.queryForList(sql, appid);
     }

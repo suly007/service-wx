@@ -66,6 +66,7 @@
     <logger name="org.jboss.logging" level="INFO" />   
     
     <logger name="com.netflix" level="INFO" />
+    <logger name="com.zaxxer.hikari.pool.HikariPool" level="INFO" />
 	<logger name="com.common.performance.dao.SysPerformanceLogDao" level="INFO" />
 	<logger name="org.apache.kafka" level="WARN" />
     

@@ -22,5 +22,6 @@ weixin:
 qywx:
   corpId: wwe86dd806f53d5ead
   zabbix:
+    agentId: 1000002
     token: 7ZRhrY8
     encodingAESKey: JFj18Ct6Qy2Pw86IN2tLa3NUKejnHLSs_7xd58FDRys

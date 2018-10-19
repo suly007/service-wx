@@ -11,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Map;
-
 /**
  * 类
  *
@@ -51,7 +49,6 @@ public class QywxMessageService implements MessageService {
         m.setText(new Content(message));
         m.setAgentid(agentid);
         log.info("post:{}",JSON.toJSONString(m,true));
-        Map map =restTemplate.postForObject(action,m,Map.class);
         ErrorInfo errorInfo = restTemplate.postForObject(action,m,ErrorInfo.class);
         dataService.insertMessage(openId, UserMapUtil.userMap.get(openId), message, JSON.toJSONString(errorInfo));
         //如果token失效 清空内存中的token,将数据库token设置为过期,消息重发

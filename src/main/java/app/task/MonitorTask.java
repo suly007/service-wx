@@ -33,10 +33,16 @@ public class MonitorTask {
 
     private final int fixedDelay = 200;
 
+    // 输出ok间隔次数
+    private int logOkInterval = 100;
+
+    // 计数器
+    private int times = 0;
+
 
     @Scheduled(fixedDelay = fixedDelay)
     private void monitor() {
-
+        times++;
         if (isOpen()) {
             Map<String, Stocks> currentInfo = monitor.getAllCurrentInfo();
             //chg process
@@ -45,13 +51,18 @@ public class MonitorTask {
             monitor.processComp(currentInfo);
             monitor.reLoadList();
             //delBlack();
-            log.info(" ok.....");
+            if (times % logOkInterval == 0) {
+                log.info(" ok.....");
+            }
         } else {
             try {
                 dataService.initData();
                 dataService.delData();
+                times = 0;
+                log.info("休眠10分钟");
                 // 休眠10分钟
                 Thread.sleep(1000 * 60 * 10);
+
             } catch (InterruptedException e) {
                 log.error("中断异常", e);
             }
@@ -67,17 +78,12 @@ public class MonitorTask {
      */
     private boolean isOpen() {
 
-        double amBegin = 9.15;
-        double amEnd = 11.30;
-        double pmBegin = 13.00;
-        double pmEnd = 15.00;
+        double begin = 9.0;
+        double end = 16.0;
 
         double now = Double.valueOf(simpleDateFormat.format(new Date()));
 
-        if (now >= amBegin && now <= amEnd) {
-            return true;
-        }
-        if (now > pmBegin && now < pmEnd) {
+        if (now > begin && now < end) {
             return true;
         }
 
