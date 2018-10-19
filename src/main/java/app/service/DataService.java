@@ -128,7 +128,7 @@ public class DataService {
 
 
     public boolean insertMessage(String open_id, String user, String message, String res) {
-        String sql = "insert into weixin_message ( to_open_id, to_user, message,send_res, send_time, message_id) values (?,?,?,?,now(),?)";
+        String sql = "insert into weixin_message ( to_open_id, to_user, message,send_res, send_time) values (?,?,?,?,now())";
         return jdbcTemplate.update(sql, open_id, user, message, res) > 0;
     }
 

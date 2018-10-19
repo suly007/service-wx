@@ -1,5 +1,8 @@
 package app.util;
 
+import lombok.Data;
+
+@Data
 public class ErrorInfo {
 	private String errcode;
 	private String errmsg;
@@ -9,17 +12,5 @@ public class ErrorInfo {
 		this.errcode = errcode;
 		this.errmsg = errmsg;
 	}
-	public String getErrcode() {
-		return errcode;
-	}
-	public void setErrcode(String errcode) {
-		this.errcode = errcode;
-	}
-	public String getErrmsg() {
-		return errmsg;
-	}
-	public void setErrmsg(String errmsg) {
-		this.errmsg = errmsg;
-	}
-	
+
 }

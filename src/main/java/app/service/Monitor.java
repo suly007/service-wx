@@ -31,7 +31,8 @@ public class Monitor extends Thread{
 	private String stockListStr;
 	private String baseURL = "http://hq.sinajs.cn/";
 
-	private MessageSend ms=new MessageSend();
+	@Autowired
+	private QywxMessageService qywxMessageService;
 
 	private SimpleDateFormat simpleDateFormat ;
 	private static final java.text.DecimalFormat df = new java.text.DecimalFormat("#.00");
@@ -176,7 +177,10 @@ public class Monitor extends Thread{
 				msg.append(" <a href=\"http://image.sinajs.cn/newchart/monthly/n/");
 				msg.append(stocks_alias.replace("s_", ""));
 				msg.append(".gif\" > 月K</a>");
-				ms.SendMessage(msg.toString(),"text", open_id,true);
+
+				Message message = new Message("100012",msg.toString(),"text",open_id,true);
+
+				qywxMessageService.SendMessage(message);
 				if (dataService.updateChange(stocks_id,"-")&&reLoadList()) {
 					System.out.println("data process success....");
 				} else {
@@ -209,7 +213,9 @@ public class Monitor extends Thread{
 				msg.append(" <a href=\"http://image.sinajs.cn/newchart/monthly/n/");
 				msg.append(stocks_alias.replace("s_", ""));
 				msg.append(".gif\" > 月K</a>");
-				ms.SendMessage(msg.toString(),"text", open_id,true);
+				Message message = new Message("100012",msg.toString(),"text",open_id,true);
+
+				qywxMessageService.SendMessage(message);
 				if (dataService.updateChange(stocks_id,"+")&&reLoadList()) {
 					System.out.println("data process success....");
 				} else {
@@ -288,7 +294,8 @@ public class Monitor extends Thread{
 						msg.append(",");
 						msg.append(stocks_comp.getChgpercent());
 						msg.append("% \n");
-						ms.SendMessage(msg.toString(),"text", open_id,true);
+						Message message = new Message("100012",msg.toString(),"text",open_id,true);
+						qywxMessageService.SendMessage(message);
 						if (dataService.updateDiffWarnTime(stocks_id,"+")&&reLoadList()) {
 							System.out.println("data process success....");
 						} else {
@@ -325,7 +332,8 @@ public class Monitor extends Thread{
 						msg.append(",");
 						msg.append(stocks.getChgpercent());
 						msg.append("%\n");
-						ms.SendMessage(msg.toString(),"text", open_id,true);
+						Message message = new Message("100012",msg.toString(),"text",open_id,true);
+						qywxMessageService.SendMessage(message);
 						if (dataService.updateDiffWarnTime(stocks_id,"-")&&reLoadList()) {
 							System.out.println("data process success....");			
 						} else {
