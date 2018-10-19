@@ -3,6 +3,7 @@ package app.service;
 import app.pojo.Stocks;
 import app.util.MessageUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -187,58 +188,49 @@ public class StocksService {
         return dataService.getStockListStr();
     }
 
-    public Map<String, String> ProcessContent(String content, String msgType, String fromUserName) {
+    public Map<String, String> getActionMap(String content, String fromUserName) {
         Map<String, String> resMap = new HashMap<String, String>();
         String actionType = "";
         String action = "";
-        // 文本消息
-        if (msgType.equals(MessageUtil.REQ_MESSAGE_TYPE_TEXT) && content != null) {
-            log.info("文本内容：" + content);
-            if ("ok".equalsIgnoreCase(content)) {
-
-                actionType = "ChgBaseDiff";
-                action = content;
-            } else if ("zx".equalsIgnoreCase(content) || "#".contentEquals(content)) {
+        if ("ok".equalsIgnoreCase(content)) {
+            actionType = "ChgBaseDiff";
+            action = content;
+        } else if ("zx".equalsIgnoreCase(content) || "#".contentEquals(content)) {
+            actionType = "SinaStock";
+            action = getStocksListStr(fromUserName);
+        } else if ("all".equalsIgnoreCase(content) || "##".endsWith(content)) {
+            actionType = "SinaStock";
+            action = getStocksListStr();
+        } else if (".#".equals(content) || ("-#".equals(content))) {
+            actionType = "DelAllStock";
+            action = content;
+        } else if (content.length() == 6) {// 长度为6 解析为stocks
+            String stockCode = processStockCode(content);
+            if (stockCode.contains("s_sh") || stockCode.contains("s_sz")) {
                 actionType = "SinaStock";
-                action = getStocksListStr(fromUserName);
-            } else if ("all".equalsIgnoreCase(content) || "##".endsWith(content)) {
-                actionType = "SinaStock";
-                action = getStocksListStr();
-            } else if (".#".equals(content) || ("-#".equals(content))) {
-                actionType = "DelAllStock";
-                action = content;
-            } else if (content.length() == 6) {// 长度为6 解析为stocks
-                String stockCode = processStockCode(content);
-                if (stockCode.contains("s_sh") || stockCode.contains("s_sz")) {
-                    actionType = "SinaStock";
-                    action = stockCode;
-                } else {
-                    actionType = "Message";
-                    action = "ErrorStock";
-                }
-            } else if (content.length() == 7) {
-                String stockCode = processStockCode(content.substring(1, 7));
-                actionType = "Message";
-                action = "ErrorStock";
-                if (stockCode.length() == 10) {
-                    if (content.charAt(0) == '+') {
-                        actionType = "AddStock";
-                        action = stockCode;
-                    } else if (content.charAt(0) == '-' || content.charAt(0) == '.') {
-                        actionType = "DelStock";
-                        action = stockCode;
-                    }
-                }
+                action = stockCode;
             } else {
                 actionType = "Message";
-                action = "Manual";
+                action = "ErrorStock";
+            }
+        } else if (content.length() == 7) {
+            String stockCode = processStockCode(content.substring(1, 7));
+            actionType = "Message";
+            action = "ErrorStock";
+            if (stockCode.length() == 10) {
+                if (content.charAt(0) == '+') {
+                    actionType = "AddStock";
+                    action = stockCode;
+                } else if (content.charAt(0) == '-' || content.charAt(0) == '.') {
+                    actionType = "DelStock";
+                    action = stockCode;
+                }
             }
         } else {
-            log.info("非文本内容：" + content);
-            // 非文本类型
             actionType = "Message";
             action = "Manual";
         }
+
         resMap.put("actionType", actionType);
         resMap.put("action", action);
         log.info("解析用户消息:{},解析结果:{}", content, resMap);
@@ -253,14 +245,30 @@ public class StocksService {
 
         // 消息类型
         String msgType = requestMap.get("MsgType");
-        String Content = requestMap.get("Content");
+
+        String Content = "";
+        if (MessageUtil.REQ_MESSAGE_TYPE_EVENT.equals(msgType)) {
+            // 自定义菜单事件
+            //EventKey=#, Event=click;
+            String eventType = MapUtils.getString(requestMap, "Event");
+            if (MessageUtil.EVENT_TYPE_CLICK.equals(eventType)) {
+                String EventKey = MapUtils.getString(requestMap, "EventKey");
+
+                Content = EventKey;
+            }
+
+        } else if (msgType.equals(MessageUtil.REQ_MESSAGE_TYPE_TEXT)) {
+            Content = requestMap.get("Content");
+            log.info("文本内容：" + Content);
+        }
+
         log.info("消息处理：fromUserName:" + fromUserName + ",toUserName:" + toUserName + ",msgType:" + msgType
                 + "Content:" + Content);
         StringBuilder respContent = new StringBuilder();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         respContent.append(sdf.format(new Date()));
         respContent.append("\n");
-        Map<String, String> actionMap = ProcessContent(Content, msgType, fromUserName);
+        Map<String, String> actionMap = getActionMap(Content,  fromUserName);
         String action = actionMap.get("action");
         String actionType = actionMap.get("actionType");
         // 股票代码处理

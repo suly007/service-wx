@@ -79,7 +79,7 @@ public class MonitorTask {
     private boolean isOpen() {
 
         double begin = 9.0;
-        double end = 16.0;
+        double end = 15.0;
 
         double now = Double.valueOf(simpleDateFormat.format(new Date()));
 
