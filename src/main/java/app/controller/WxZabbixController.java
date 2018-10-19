@@ -85,14 +85,18 @@ public class WxZabbixController {
             Map<String, String> requestMap = MessageUtil.parseXml(sMsg);
             log.info("字符串解析为map:{}",requestMap);
             PassiveMessage passiveMessage = wxZabbixService.processRequest(requestMap);
-            passiveMessage.setMsgSignature(msgSignature);
-            passiveMessage.setTimeStamp(timestamp);
-            passiveMessage.setNonce(nonce);
-            msg = MessageUtil.textMessageToXml(passiveMessage);
-            log.info("回复消息加密前:{}",msg);
-            msg = wxBizMsgCrypt.EncryptMsg(msg, timestamp, nonce);
-            log.info("回复消息加密后:{}",msg);
-
+            if("".equals(passiveMessage.getContent())){
+                log.info("消息内容为空,不发送~");
+                return null;
+            }else{
+                passiveMessage.setMsgSignature(msgSignature);
+                passiveMessage.setTimeStamp(timestamp);
+                passiveMessage.setNonce(nonce);
+                msg = MessageUtil.textMessageToXml(passiveMessage);
+                log.info("回复消息加密前:{}",msg);
+                msg = wxBizMsgCrypt.EncryptMsg(msg, timestamp, nonce);
+                log.info("回复消息加密后:{}",msg);
+            }
         } catch (Exception e) {
             log.error("处理企业微信post请求失败",e);
         }

@@ -192,18 +192,23 @@ public class StocksService {
         Map<String, String> resMap = new HashMap<String, String>();
         String actionType = "";
         String action = "";
+        String way ="";
         if ("ok".equalsIgnoreCase(content)) {
             actionType = "ChgBaseDiff";
             action = content;
-        } else if ("zx".equalsIgnoreCase(content) || "#".contentEquals(content)) {
+            way ="ok";
+        } else if ("zx".equalsIgnoreCase(content) || "#".equals(content)) {
             actionType = "SinaStock";
             action = getStocksListStr(fromUserName);
-        } else if ("all".equalsIgnoreCase(content) || "##".endsWith(content)) {
+            way ="zx";
+        } else if ("all".equalsIgnoreCase(content) || "##".equalsIgnoreCase(content)) {
             actionType = "SinaStock";
             action = getStocksListStr();
+            way ="all";
         } else if (".#".equals(content) || ("-#".equals(content))) {
             actionType = "DelAllStock";
             action = content;
+            way =".#";
         } else if (content.length() == 6) {// 长度为6 解析为stocks
             String stockCode = processStockCode(content);
             if (stockCode.contains("s_sh") || stockCode.contains("s_sz")) {
@@ -213,6 +218,7 @@ public class StocksService {
                 actionType = "Message";
                 action = "ErrorStock";
             }
+            way = "6";
         } else if (content.length() == 7) {
             String stockCode = processStockCode(content.substring(1, 7));
             actionType = "Message";
@@ -226,14 +232,17 @@ public class StocksService {
                     action = stockCode;
                 }
             }
+            way = "7";
         } else {
             actionType = "Message";
             action = "Manual";
+            way = "else";
         }
 
         resMap.put("actionType", actionType);
         resMap.put("action", action);
-        log.info("解析用户消息:{},解析结果:{}", content, resMap);
+        resMap.put("way",way);
+        log.info("解析用户消息:[{}],解析结果:[{}]", content, resMap);
         return resMap;
     }
 
@@ -260,6 +269,11 @@ public class StocksService {
         } else if (msgType.equals(MessageUtil.REQ_MESSAGE_TYPE_TEXT)) {
             Content = requestMap.get("Content");
             log.info("文本内容：" + Content);
+        }
+
+        if("".equals(Content)){
+            log.info("用户内容不进行解析~~~~~~~~~~~~~");
+            return "";
         }
 
         log.info("消息处理：fromUserName:" + fromUserName + ",toUserName:" + toUserName + ",msgType:" + msgType
