@@ -1,4 +1,4 @@
-nohup java -Dspring.profiles.active=test -jar target/service-wx.jar >/dev/null 2>&1 &
+nohup java -Dspring.profiles.active=prod -jar target/service-wx.jar >/dev/null 2>&1 &
 
 
 ./vlog.sh

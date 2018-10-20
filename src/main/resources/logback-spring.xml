@@ -8,9 +8,9 @@
 	<springProperty name="system" source="logging.kafka.system"  defaultValue="system"/>
 	<springProperty name="servers" source="logging.kafka.servers" />-->
 	<springProperty name="basePath" source="logging.basePath" defaultValue="/data/logs"/>
-	
+
 	<property name="pattern" value="%d %5p %22t [%X{TID}] %m [%c] %n" />
-	
+
 	<!-- 文件日志 -->
 	<appender name="rollingFileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -22,7 +22,7 @@
 			<pattern>${pattern}</pattern>
 		</encoder>
 	</appender>
-	
+
 	<!--<appender neverBlock="true"  name="KafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
 		<encoder class="com.github.danielwegener.logback.kafka.encoding.LayoutKafkaMessageEncoder">
 			<layout class="net.logstash.logback.layout.LogstashLayout" >
@@ -37,16 +37,16 @@
 		<deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
 		<producerConfig>bootstrap.servers=${servers}</producerConfig>
 	</appender>
-	
+
 	&lt;!&ndash; 异步输出 &ndash;&gt;
-	<appender name ="ASYNC" class= "ch.qos.logback.classic.AsyncAppender">  
-		<appender-ref ref ="KafkaAppender"/>  
+	<appender name ="ASYNC" class= "ch.qos.logback.classic.AsyncAppender">
+		<appender-ref ref ="KafkaAppender"/>
 		<neverBlock>true</neverBlock>
 	</appender>  -->
 
     <!-- 控制台打印 -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder charset="utf-8">        		
+        <encoder charset="utf-8">
             <pattern>${pattern}</pattern>
         </encoder>
     </appender>
@@ -56,21 +56,21 @@
 	<logger name="org.springframework.jdbc.core.StatementCreatorUtils" level="Trace" />-->
 
     <logger name="org.hibernate.validator" level="INFO" />
-    
+
     <logger name="org.mybatis.spring.mapper.ClassPathMapperScanner" level="INFO" />
     <logger name="org.mybatis.spring.SqlSessionFactoryBean" level="INFO" />
     <logger name="org.mybatis.spring.SqlSessionUtils" level="INFO" />
     <logger name="org.mybatis.spring.transaction.SpringManagedTransaction" level="INFO" />
-   
+
     <logger name="org.apache.http" level="INFO" />
-    <logger name="org.jboss.logging" level="INFO" />   
-    
+    <logger name="org.jboss.logging" level="INFO" />
+
     <logger name="com.netflix" level="INFO" />
     <logger name="com.zaxxer.hikari.pool.HikariPool" level="INFO" />
 	<logger name="com.common.performance.dao.SysPerformanceLogDao" level="INFO" />
 	<logger name="org.apache.kafka" level="WARN" />
-    
-    
+
+
     <springProfile name="dev">
 	    <root level="DEBUG">
 	        <appender-ref ref="STDOUT" />
@@ -78,8 +78,8 @@
 	    	<appender-ref ref="rollingFileAppender" /> -->
 	    </root>
 	</springProfile>
-	
-	<springProfile name="test">
+
+	<springProfile name="prod">
 	 	<root level="DEBUG">
 	    	<!--<appender-ref ref="STDOUT" />
 	    	<appender-ref ref="ASYNC" />-->
@@ -87,7 +87,7 @@
 	    </root>
 	</springProfile>
 
-	<springProfile name="prod,pbak">
+	<springProfile name="pbak">
 		<root level="DEBUG">
 			<appender-ref ref="ASYNC" />
 			<appender-ref ref="rollingFileAppender" />
