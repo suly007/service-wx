@@ -32,7 +32,7 @@ public class DataService {
 
     //通过公众号，获取用户查询过的代码列表信息
     public List<Map<String, Object>> getStockMapListByCorpIdComp(String appid) {
-        String sql = "select stocks_code, stocks_alias, stocks_code_comp, stocks_alias_comp, base_diff, ifnull(diff_warn_time,now()) diff_warn_time, diff_range, change_min, change_min_flag, change_max, change_max_flag, stocks_id, open_id, add_userid, add_date, modify_userid, modify_date from stocks_list where appid=? and stocks_code_comp is not null";
+        String sql = "select stocks_code, stocks_alias, stocks_code_comp, stocks_alias_comp, base_multiple, base_diff, ifnull(diff_warn_time,now()) diff_warn_time, diff_range, change_min, change_min_flag, change_max, change_max_flag, stocks_id, open_id, add_userid, add_date, modify_userid, modify_date from stocks_list where appid=? and stocks_code_comp is not null";
         return jdbcTemplate.queryForList(sql, appid);
     }
 
@@ -46,17 +46,17 @@ public class DataService {
         return MapUtils.getString(jdbcTemplate.queryForMap(sql, open_id, open_id), "stocks_alias");
     }
 
-    public boolean updateDiffWarnTime(String stocks_id, String flag) {
+    public boolean updateDiffWarnTime(int stocks_id, String flag) {
         String sql = "update stocks_list set diff_warn_time=now(),next_base_diff=(base_diff" + flag + "diff_range) where stocks_id =?";
         return jdbcTemplate.update(sql, stocks_id) > 0;
     }
 
     public boolean chgBaseDiffByUser(String open_id, String appid) {
-        String sql = "update stocks_list set base_diff=next_base_diff where open_id=? and appid=? and  (now()-diff_warn_time)*24*60<=5";
+        String sql = "update stocks_list set base_diff=next_base_diff,diff_warn_time=DATE_ADD(diff_warn_time,INTERVAL -5 MINUTE)  where open_id=? and appid=? and  (now()-diff_warn_time) <=5 * 60";
         return jdbcTemplate.update(sql, open_id, appid) > 0;
     }
 
-    public boolean updateChange(String stocks_id, String flag) {
+    public boolean updateChange(int stocks_id, String flag) {
         String sql = "update stocks_list set change_min=(change_min" + flag + "2),change_max=(change_max" + flag + "2) where stocks_id=? ";
         return jdbcTemplate.update(sql, stocks_id) > 0;
     }
@@ -132,11 +132,10 @@ public class DataService {
         return jdbcTemplate.update(sql, open_id, user, message, res) > 0;
     }
 
-   /*public List<Map<String, String>> getBlackList() {
+   public List<Map<String, Object>> getBlackList() {
         String sql = "select * from weixin_blacklist";
-        DaoParam param = _dao.createParam(sql);
-        return _dao.query(param);
-    }*/
+        return jdbcTemplate.queryForList(sql);
+    }
 
     /**
      * weixin_errorinfo 表处理=========================================================================

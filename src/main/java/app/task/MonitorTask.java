@@ -2,7 +2,7 @@ package app.task;
 
 import app.pojo.Stocks;
 import app.service.DataService;
-import app.service.Monitor;
+import app.service.MonitorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
@@ -20,11 +20,11 @@ import java.util.Map;
  */
 @Component
 @Slf4j
-@Profile({"test"})
+@Profile({"prod","dev"})
 public class MonitorTask {
 
     @Autowired
-    private Monitor monitor;
+    private MonitorService monitorService;
 
     @Autowired
     private DataService dataService;
@@ -34,7 +34,7 @@ public class MonitorTask {
     private final int fixedDelay = 200;
 
     // 输出ok间隔次数
-    private int logOkInterval = 100;
+    private int logOkInterval = 10;
 
     // 计数器
     private int times = 0;
@@ -44,12 +44,12 @@ public class MonitorTask {
     private void monitor() {
         times++;
         if (isOpen()) {
-            Map<String, Stocks> currentInfo = monitor.getAllCurrentInfo();
+            Map<String, Stocks> currentInfo = monitorService.getAllCurrentInfo();
             //chg process
-            monitor.processChg(currentInfo);
+            monitorService.processChg(currentInfo);
             //comp process
-            monitor.processComp(currentInfo);
-            monitor.reLoadList();
+            monitorService.processComp(currentInfo);
+            monitorService.reLoadList();
             //delBlack();
             if (times % logOkInterval == 0) {
                 log.info(" ok.....");

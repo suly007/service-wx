@@ -26,7 +26,7 @@ public class StocksService {
     private DataService dataService;
 
     @Autowired
-    private Monitor monitor;
+    private MonitorService monitorService;
 
     private String baseURL = "http://hq.sinajs.cn/";
 
@@ -38,30 +38,30 @@ public class StocksService {
     }
 
 
-    public String delAllByUser(String content, String open_id, String appid) {
+    public String delAllByUser(String content, String openId, String appid) {
         String resulet = "未找到相关数据或解析出错!";
-        if (dataService.delAllExist(open_id, appid)) {
+        if (dataService.delAllExist(openId, appid)) {
             resulet = "操作成功!";
         }
         return resulet;
     }
 
-    public String chgBaseDiffByUser(String content, String open_id, String appid) {
+    public String chgBaseDiffByUser(String content, String openId, String appid) {
         String resulet = "未找到相关数据或解析出错!";
-        if (dataService.chgBaseDiffByUser(open_id, appid)) {
+        if (dataService.chgBaseDiffByUser(openId, appid)) {
             resulet = "操作成功!";
         }
         return resulet;
     }
 
 
-    public String addCodeByUser(String content, String open_id, String appid) {
+    public String addCodeByUser(String content, String openId, String appid) {
         String resulet = "未找到相关数据或解析出错!";
         if (content != null && content.length() == 10 && content.charAt(0) == 's') {
             String stocks_code = content.replace("s_sh", "").replace("s_sz", "");
             if (stocks_code.length() == 6) {
-                if (dataService.notExist(stocks_code, open_id, appid)) {
-                    if (dataService.insertData(stocks_code, content, open_id, appid)) {
+                if (dataService.notExist(stocks_code, openId, appid)) {
+                    if (dataService.insertData(stocks_code, content, openId, appid)) {
                         resulet = "操作成功!";
                     }
                 } else {
@@ -72,12 +72,12 @@ public class StocksService {
         return resulet;
     }
 
-    public String delCodeByUser(String content, String open_id, String appid) {
+    public String delCodeByUser(String content, String openId, String appid) {
         String resulet = "未找到相关数据或解析出错!";
         if (content != null && content.length() == 10 && content.charAt(0) == 's') {
             String stocks_code = content.replace("s_sh", "").replace("s_sz", "");
             if (stocks_code.length() == 6) {
-                if (dataService.delExist(stocks_code, open_id, appid)) {
+                if (dataService.delExist(stocks_code, openId, appid)) {
                     resulet = "操作成功!";
                 }
             }
@@ -95,12 +95,12 @@ public class StocksService {
         url.append(RandomUtils.nextLong());
         url.append("&list=");
         url.append(action);
-        Map<String, Stocks> currentInfo = monitor.getCurrentInfo(url.toString());//sortMapByValue(monitor.getCurrentInfo(url.toString()));
+        Map<String, Stocks> currentInfo = monitorService.getCurrentInfo(url.toString());//sortMapByValue(monitor.getCurrentInfo(url.toString()));
         int count = currentInfo.keySet().size();
         for (String key : currentInfo.keySet()) {
             Stocks s = currentInfo.get(key);
             if (count > 1) {
-                double percent = s.getChgpercent();
+                double percent = s.getChgPercent();
                 String space;
                 String percentStr;
                 if (percent >= 0) {
@@ -141,7 +141,7 @@ public class StocksService {
                 respContent.append("\n价格:");
                 respContent.append(s.getPrice());
                 respContent.append(",涨幅:");
-                respContent.append(s.getChgpercent());
+                respContent.append(s.getChgPercent());
                 respContent.append("%\n");
                 respContent.append(" <a href=\"http://image.sinajs.cn/newchart/min/n/");
                 respContent.append(key.replace("s_", ""));
@@ -174,16 +174,16 @@ public class StocksService {
         return stockCode;
     }
 
-    //根据open_id获取自选股列表
-    public String getStocksListStr(String open_id) {
-        String stocksListStr = dataService.getStockListStrByOpenID(open_id);
+    //根据openId获取自选股列表
+    public String getStocksListStr(String openId) {
+        String stocksListStr = dataService.getStockListStrByOpenID(openId);
         if (stocksListStr == null || stocksListStr.length() < 9) {
             stocksListStr = dataService.getStockListStr();
         }
         return stocksListStr;
     }
 
-    //根据open_id获取自选股列表
+    //根据openId获取自选股列表
     public String getStocksListStr() {
         return dataService.getStockListStr();
     }
@@ -247,7 +247,7 @@ public class StocksService {
     }
 
     public String process(Map<String, String> requestMap) {
-        // 发送方帐号（open_id）
+        // 发送方帐号（openId）
         String fromUserName = requestMap.get("FromUserName");
         // 公众帐号
         String toUserName = requestMap.get("ToUserName");
