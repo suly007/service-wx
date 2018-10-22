@@ -12,6 +12,7 @@ import lombok.Data;
 public class Stocks {
 	private int id ;
 	private String code;
+	private String alias;
 	private String name;
 	private double price;
 	private double chgPrice;

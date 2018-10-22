@@ -105,6 +105,7 @@ public class MonitorService{
             stocks.setCount(Double.valueOf(values[4]));
             stocks.setMoney(Double.valueOf(values[5]));
             stocks.setCode(key.replace("s_sh", "").replace("s_sz", ""));
+            stocks.setAlias(key);
             resultMap.put(key, stocks);
         }
 
@@ -173,7 +174,7 @@ public class MonitorService{
      * @param flag      涨跌标识
      */
     private void sendChgMessage(Stocks stocks,String openId,String flag ){
-        String stocksCode =stocks.getCode();
+        String stocksCode =stocks.getAlias().replace("s_","");
         StringBuilder msg = new StringBuilder();
         msg.append(simpleDateFormat.format(new Date()));
         msg.append("\n");
@@ -280,6 +281,8 @@ public class MonitorService{
      * @param flag          涨跌标识
      */
     private void sendCompMessage(double realDiff, Stocks stocks, Stocks stocksComp, String openId, String flag) {
+        String stocksCode =stocks.getAlias().replace("s_","");
+        String stocksCompCode =stocksComp.getAlias().replace("s_","");
         StringBuilder msg = new StringBuilder();
         msg.append(simpleDateFormat.format(new Date()));
         msg.append("\n");
@@ -288,7 +291,7 @@ public class MonitorService{
         msg.append("%\n");
         msg.append("卖出:");
         msg.append(" <a href=\"http://image.sinajs.cn/newchart/min/n/");
-        msg.append(stocks.getCode());
+        msg.append(stocksCode);
         msg.append(".gif\" >");
         //msg.append(stocks.getCode());
         msg.append(stocks.getName());
@@ -299,7 +302,7 @@ public class MonitorService{
         msg.append("%\n");
         msg.append("买入:");
         msg.append(" <a href=\"http://image.sinajs.cn/newchart/min/n/");
-        msg.append(stocksComp.getCode());
+        msg.append(stocksCompCode);
         msg.append(".gif\" >");
         //msg.append(stocks_comp.getCode());
         msg.append(stocksComp.getName());

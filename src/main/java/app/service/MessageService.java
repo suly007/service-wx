@@ -5,7 +5,6 @@ import app.pojo.SendResult;
 import app.util.Content;
 import app.util.Message;
 import app.util.MessageUtil;
-import app.util.UserMapUtil;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,13 +20,18 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class MessageService {
 
-    @Autowired
     private AccessTokenService accessTokenService;
-    @Autowired
     private DataService dataService;
-    @Autowired
     private RestTemplate restTemplate;
+    private UserMapService userMapService;
 
+    @Autowired
+    public MessageService(AccessTokenService accessTokenService, DataService dataService, RestTemplate restTemplate, UserMapService userMapService) {
+        this.accessTokenService = accessTokenService;
+        this.dataService = dataService;
+        this.restTemplate = restTemplate;
+        this.userMapService = userMapService;
+    }
 
     public SendResult sendMessage(String agentId, String openId, String message, boolean isResend) {
         AccessToken accessToken = accessTokenService.getSingleAccessToken();
@@ -45,7 +49,7 @@ public class MessageService {
         m.setAgentid(agentId);
         log.info("post:{}",JSON.toJSONString(m,true));
         SendResult sendResult = restTemplate.postForObject(action,m,SendResult.class);
-        dataService.insertMessage(openId, UserMapUtil.userMap.get(openId), message, JSON.toJSONString(sendResult));
+        dataService.insertMessage(openId, userMapService.getUserName(openId), message, JSON.toJSONString(sendResult));
         //如果token失效 清空内存中的token,将数据库token设置为过期,消息重发
         if ("40001".equals(sendResult.getErrcode())) {
             accessTokenService.setAccessToken(null);
