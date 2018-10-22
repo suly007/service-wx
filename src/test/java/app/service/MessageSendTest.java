@@ -37,7 +37,7 @@ public class MessageSendTest {
             e.printStackTrace();
         }
 
-        SendResult sendResult= messageService.sendMessage("1000002","XunQingDong","hi pan" ,true);
+        SendResult sendResult= messageService.sendMessage("1000002","XunQingDong","你好" ,true);
         log.info("sendResult:{}",sendResult);
         Assert.assertEquals(sendResult.getErrmsg(),"ok");
         Assert.assertEquals(sendResult.getInvaliduser(),"");
