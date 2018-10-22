@@ -1,7 +1,7 @@
 package app.service;
 
 import app.pojo.AccessToken;
-import app.util.ErrorInfo;
+import app.pojo.SendResult;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
@@ -21,10 +21,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class MessageSendTest {
 
     @Autowired
-    private QywxMessageService messageSend;
+    private MessageService messageService;
 
     @Autowired
-    private QywxAccessTokenService accessTokenService;
+    private AccessTokenService accessTokenService;
 
     @Test
     public void sendMessage() {
@@ -37,16 +37,9 @@ public class MessageSendTest {
             e.printStackTrace();
         }
 
-        Message message = new Message();
-        message.setAgentid("1000002");
-        message.setMsgtype("text");
-        message.setOpenId("XunQingDong");
-        message.setMessage("hi pan");
-        message.setResend(true);
-
-        ErrorInfo errorInfo= messageSend.SendMessage(message);
-        log.info("ErrorInfo:{}",errorInfo);
-        Assert.assertEquals(errorInfo.getErrmsg(),"ok");
-        Assert.assertEquals(errorInfo.getInvaliduser(),"");
+        SendResult sendResult= messageService.sendMessage("1000002","XunQingDong","hi pan" ,true);
+        log.info("sendResult:{}",sendResult);
+        Assert.assertEquals(sendResult.getErrmsg(),"ok");
+        Assert.assertEquals(sendResult.getInvaliduser(),"");
     }
 }

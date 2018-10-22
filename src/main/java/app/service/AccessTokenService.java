@@ -19,15 +19,16 @@ import java.util.Map;
  */
 @Service
 @Slf4j
-public class AccessTokenService {
+public class AccessTokenService{
+
     private AccessToken accessToken = new AccessToken();
-    @Value("${weixin.appid}")
+    @Value("${qywx.corpId}")
     private String appid;
-    @Value("${weixin.appsecret}")
+    @Value("${qywx.zabbix.encodingAESKey}")
     private String appsecret;
 
-    // 获取access_token的接口地址（GET） 限200（次/天）
-    private final static String ACCESS_TOKEN_URL = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=%s&secret=%s";
+    // https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=ID&corpsecret=SECRECT
+    private final static String ACCESS_TOKEN_URL = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=%s&corpsecret=%s";
 
     @Autowired
     private SimpleDateFormat simpleDateFormat;
@@ -93,14 +94,12 @@ public class AccessTokenService {
                 accessToken.setExpiresIn(expiresIn);
                 now.setTime(now.getTime() + expiresIn * 1000);
                 accessToken.setExpiresDate(now);
-                //将token存入数据库
+                // 将token存入数据库
                 dataService.insertToken(appid, appsecret, token, String.valueOf(expiresIn), simpleDateFormat.format(now));
             } catch (Exception e) {
                 accessToken = null;
                 // 获取token失败
-                // log.error("获取token失败 errcode:{} errmsg:{}",
-                // jsonObject.getInt("errcode"),
-                // jsonObject.getString("errmsg"));
+                log.error("存储token异常!",e);
             }
         }
     }

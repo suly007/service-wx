@@ -1,9 +1,6 @@
 package app.util;
 
-import app.message.corp.PassiveMessage;
-import app.message.resp.Article;
-import app.message.resp.MusicMessage;
-import app.message.resp.NewsMessage;
+import app.message.resp.PassiveMessage;
 import app.message.resp.TextMessage;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.core.util.QuickWriter;
@@ -163,30 +160,6 @@ public class MessageUtil {
 	public static String textMessageToXml(PassiveMessage passiveMessage) {
 		xstream.alias("xml", passiveMessage.getClass());
 		return xstream.toXML(passiveMessage);
-	}
-
-
-	/**
-	 * 音乐消息对象转换成xml
-	 * 
-	 * @param musicMessage 音乐消息对象
-	 * @return xml
-	 */
-	public static String musicMessageToXml(MusicMessage musicMessage) {
-		xstream.alias("xml", musicMessage.getClass());
-		return xstream.toXML(musicMessage);
-	}
-
-	/**
-	 * 图文消息对象转换成xml
-	 * 
-	 * @param newsMessage 图文消息对象
-	 * @return xml
-	 */
-	public static String newsMessageToXml(NewsMessage newsMessage) {
-		xstream.alias("xml", newsMessage.getClass());
-		xstream.alias("item", new Article().getClass());
-		return xstream.toXML(newsMessage);
 	}
 
 	/**

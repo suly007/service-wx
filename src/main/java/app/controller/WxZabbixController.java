@@ -1,6 +1,6 @@
 package app.controller;
 
-import app.message.corp.PassiveMessage;
+import app.message.resp.PassiveMessage;
 import app.service.WxZabbixService;
 import app.util.MessageUtil;
 import com.qq.weixin.mp.aes.WXBizMsgCrypt;

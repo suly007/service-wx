@@ -39,15 +39,15 @@ public class MonitorService{
     private List<Map<String, Object>> blackMapList;
     private String stockListStr;
 
-    private QywxMessageService qywxMessageService;
+    private MessageService messageService;
 
     private SimpleDateFormat simpleDateFormat;
     private static final java.text.DecimalFormat df = new java.text.DecimalFormat("#.00");
 
 
     @Autowired
-    public MonitorService(@Value("${qywx.corpId}") String corpId, @Value("${qywx.zabbix.agentId}") String agentId,QywxMessageService qywxMessageService, DataService dataService, SimpleDateFormat simpleDateFormat) {
-        this.qywxMessageService =qywxMessageService;
+    public MonitorService(@Value("${qywx.corpId}") String corpId, @Value("${qywx.zabbix.agentId}") String agentId,MessageService messageService, DataService dataService, SimpleDateFormat simpleDateFormat) {
+        this.messageService =messageService;
         this.dataService = dataService;
         this.simpleDateFormat = simpleDateFormat;
         this.corpId = corpId;
@@ -203,9 +203,8 @@ public class MonitorService{
         msg.append(" <a href=\"http://image.sinajs.cn/newchart/monthly/n/");
         msg.append(stocksCode);
         msg.append(".gif\" > 月K</a>");
-        Message message = new Message(agentId, msg.toString(), "text", openId, true);
 
-        qywxMessageService.SendMessage(message);
+        messageService.sendMessage(agentId,openId,msg.toString(),true);
         if (dataService.updateChange(stocks.getId(), flag) && reLoadList()) {
             System.out.println("data process success....");
         } else {
@@ -309,8 +308,7 @@ public class MonitorService{
         msg.append(",");
         msg.append(stocksComp.getChgPercent());
         msg.append("% \n");
-        Message message = new Message(agentId, msg.toString(), "text", openId, true);
-        qywxMessageService.SendMessage(message);
+        messageService.sendMessage(agentId,openId,msg.toString(),true);
         if (dataService.updateDiffWarnTime(stocks.getId(), flag) && reLoadList()) {
             System.out.println("data process success....");
         } else {

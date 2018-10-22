@@ -1,6 +1,6 @@
 package app.service;
 
-import app.message.corp.PassiveMessage;
+import app.message.resp.PassiveMessage;
 import app.util.MessageUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

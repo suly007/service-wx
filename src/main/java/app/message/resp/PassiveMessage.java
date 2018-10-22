@@ -1,4 +1,4 @@
-package app.message.corp;
+package app.message.resp;
 
 import lombok.Data;
 
