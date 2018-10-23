@@ -11,6 +11,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 数据访问服务
+ *
+ * @author faith.huan 2018-10-23 11:43:27
+ */
 @Service
 @Slf4j
 public class DataService {
@@ -21,13 +26,13 @@ public class DataService {
 
     //通过公众号，获取用户查询过的代码列表信息
     public List<Map<String, Object>> getStockMapListByCorpIdChg(String appid) {
-        String sql = "select stocks_code, stocks_alias, stocks_code_comp, stocks_alias_comp, base_diff, ifnull(diff_warn_time,now()) diff_warn_time, diff_range, change_min, change_max, stocks_id, open_id, add_date, modify_date from stocks_list where appid=? ";
+        String sql = "select stocks_code, stocks_alias, stocks_code_comp, stocks_alias_comp, stocks_price_init, stocks_price_init_comp,diff_warn_process_flag, ifnull(diff_warn_time,now()) diff_warn_time, diff_range, change_min, change_max, stocks_id, open_id, add_date, modify_date from stocks_list where appid=? ";
         return jdbcTemplate.queryForList(sql, appid);
     }
 
     //通过公众号，获取用户查询过的代码列表信息
     public List<Map<String, Object>> getStockMapListByCorpIdComp(String appid) {
-        String sql = "select stocks_code, stocks_alias, stocks_code_comp, stocks_alias_comp, base_multiple, base_diff, ifnull(diff_warn_time,now()) diff_warn_time, diff_range, change_min, change_max, stocks_id, open_id,  add_date, modify_date from stocks_list where appid=? and stocks_code_comp is not null";
+        String sql = "select stocks_code, stocks_alias, stocks_code_comp, stocks_alias_comp, base_multiple, stocks_price_init, stocks_price_init_comp,diff_warn_process_flag, ifnull(diff_warn_time,now()) diff_warn_time, diff_range, change_min, change_max, stocks_id, open_id,  add_date, modify_date from stocks_list where appid=? and stocks_code_comp is not null";
         return jdbcTemplate.queryForList(sql, appid);
     }
 
@@ -41,14 +46,23 @@ public class DataService {
         return MapUtils.getString(jdbcTemplate.queryForMap(sql, open_id, open_id), "stocks_alias");
     }
 
-    public boolean updateDiffWarnTime(int stocks_id, String flag) {
-        String sql = "update stocks_list set diff_warn_time=now(),next_base_diff=(base_diff" + flag + "diff_range) where stocks_id =?";
+    public boolean updateDiffWarnTime(int stocks_id) {
+        String sql = "update stocks_list set diff_warn_time=now(),diff_warn_process_flag='N' where stocks_id =?";
         return jdbcTemplate.update(sql, stocks_id) > 0;
     }
 
-    public boolean chgBaseDiffByUser(String open_id, String appid) {
-        String sql = "update stocks_list set base_diff=next_base_diff,diff_warn_time=DATE_ADD(diff_warn_time,INTERVAL -5 MINUTE)  where open_id=? and appid=? and  (now()-diff_warn_time) <=5 * 60";
-        return jdbcTemplate.update(sql, open_id, appid) > 0;
+    /**
+     * 修改比价初始价格,并将预警处理状态改为已处理
+     *
+     * @param open_id           微信号
+     * @param appId             企业号
+     * @param priceInit        初始价格
+     * @param priceInitComp    初始价格-对比
+     * @return
+     */
+    public int chgInitPriceByUser(String open_id, String appId, double priceInit, double priceInitComp) {
+        String sql = "update stocks_list set stocks_price_init=?,stocks_price_init_comp=?,diff_warn_process_flag='Y'  where open_id=? and appid=? and  diff_warn_process_flag='N'";
+        return jdbcTemplate.update(sql, priceInit, priceInitComp, open_id, appId);
     }
 
     public boolean updateChange(int stocks_id, String flag) {
@@ -83,11 +97,11 @@ public class DataService {
     }
 
 
-    public boolean updateBaseDiff(String num, String open_id, String appid, String stocks_code) {
+    /*public boolean updateBaseDiff(String num, String open_id, String appid, String stocks_code) {
         String sql = "update stocks_list t set t.base_diff=? where opne_id=? and appid=? and  stocks_code=?";
 
         return jdbcTemplate.update(sql, num, open_id, appid, stocks_code) > 0;
-    }
+    }*/
 
     //十日内无查询数据代码 删除
     public boolean delData() {
@@ -127,7 +141,7 @@ public class DataService {
         return jdbcTemplate.update(sql, open_id, user, message, res) > 0;
     }
 
-   public List<Map<String, Object>> getBlackList() {
+    public List<Map<String, Object>> getBlackList() {
         String sql = "select * from weixin_blacklist";
         return jdbcTemplate.queryForList(sql);
     }

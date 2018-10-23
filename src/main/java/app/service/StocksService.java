@@ -5,6 +5,7 @@ import app.util.MessageUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.RandomUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,29 +17,31 @@ import java.util.Map;
 /**
  * 公用服务类
  *
- * @author: Huanqd@2018-10-19 10:09
+ * @author Huanqd@2018-10-19 10:09
  */
 @Slf4j
 @Service
 public class StocksService {
 
-    @Autowired
     private DataService dataService;
 
-    @Autowired
     private MonitorService monitorService;
 
-    private String baseURL = "http://hq.sinajs.cn/";
+    @Autowired
+    public StocksService(DataService dataService, MonitorService monitorService) {
+        this.dataService = dataService;
+        this.monitorService = monitorService;
+    }
 
-    public final static Map<String, String> messageMap = new HashMap<String, String>();
+    private static final  Map<String, String> MESSAGE_MAP = new HashMap<String, String>();
 
     static {
-        messageMap.put("ErrorStock", "股票代码错误!");
-        messageMap.put("Manual", "回复“股票代码“查股价\n回复#查询自选股行情\n回复##查询圈共享股行情\n回复“+股票代码“增加自选股\n回复“-(.)股票代码“删除自选股\n回复“-(.)#“删除全部自选股");
+        MESSAGE_MAP.put("ErrorStock", "股票代码错误!");
+        MESSAGE_MAP.put("Manual", "回复“股票代码“查股价\n回复#查询自选股行情\n回复##查询圈共享股行情\n回复“+股票代码“增加自选股\n回复“-(.)股票代码“删除自选股\n回复“-(.)#“删除全部自选股");
     }
 
 
-    public String delAllByUser(String content, String openId, String appid) {
+    private String delAllByUser(String content, String openId, String appid) {
         String resulet = "未找到相关数据或解析出错!";
         if (dataService.delAllExist(openId, appid)) {
             resulet = "操作成功!";
@@ -46,16 +49,25 @@ public class StocksService {
         return resulet;
     }
 
-    public String chgBaseDiffByUser(String content, String openId, String appid) {
-        String resulet = "未找到相关数据或解析出错!";
-        if (dataService.chgBaseDiffByUser(openId, appid)) {
-            resulet = "操作成功!";
+    private String ChgInitPrice(String content, String openId, String appId) {
+        String result = "未找到相关数据或解析出错!";
+        try {
+            content = content.toLowerCase().replace("ok", "");
+            String[] prices = content.split("/");
+            double priceInit = Double.valueOf(prices[0]);
+            double priceInitComp = Double.valueOf(prices[1]);
+
+            int count = dataService.chgInitPriceByUser(openId, appId, priceInit, priceInitComp);
+            result = "+" + count + "操作成功!" + priceInit + "/" + priceInitComp;
+        } catch (Exception e) {
+            log.error("ChgInitPrice发生异常,content:{},openId:{},appId:{}", content, openId, appId);
+            result = e.getMessage();
         }
-        return resulet;
+        return result;
     }
 
 
-    public String addCodeByUser(String content, String openId, String appid) {
+    private String addCodeByUser(String content, String openId, String appid) {
         String resulet = "未找到相关数据或解析出错!";
         if (content != null && content.length() == 10 && content.charAt(0) == 's') {
             String stocks_code = content.replace("s_sh", "").replace("s_sz", "");
@@ -72,7 +84,7 @@ public class StocksService {
         return resulet;
     }
 
-    public String delCodeByUser(String content, String openId, String appid) {
+    private String delCodeByUser(String content, String openId, String appid) {
         String resulet = "未找到相关数据或解析出错!";
         if (content != null && content.length() == 10 && content.charAt(0) == 's') {
             String stocks_code = content.replace("s_sh", "").replace("s_sz", "");
@@ -86,12 +98,11 @@ public class StocksService {
     }
 
 
-    public String ProcessStocks(String action) {
+    private String processStocks(String action) {
         // 默认返回的文本消息内容
         StringBuilder respContent = new StringBuilder();
         StringBuilder url = new StringBuilder();
-        url.append(baseURL);
-        url.append("rn=");
+        url.append("http://hq.sinajs.cn/rn=");
         url.append(RandomUtils.nextLong());
         url.append("&list=");
         url.append(action);
@@ -164,7 +175,7 @@ public class StocksService {
     }
 
 
-    public static String processStockCode(String Content) {
+    private static String processStockCode(String Content) {
         String stockCode = "";
         if (Content.charAt(0) == '6') {
             stockCode = "s_sh" + Content;
@@ -175,7 +186,7 @@ public class StocksService {
     }
 
     //根据openId获取自选股列表
-    public String getStocksListStr(String openId) {
+    private String getStocksListStr(String openId) {
         String stocksListStr = dataService.getStockListStrByOpenID(openId);
         if (stocksListStr == null || stocksListStr.length() < 9) {
             stocksListStr = dataService.getStockListStr();
@@ -184,31 +195,32 @@ public class StocksService {
     }
 
     //根据openId获取自选股列表
-    public String getStocksListStr() {
+    private String getStocksListStr() {
         return dataService.getStockListStr();
     }
 
-    public Map<String, String> getActionMap(String content, String fromUserName) {
+    private Map<String, String> getActionMap(String content, String fromUserName) {
         Map<String, String> resMap = new HashMap<String, String>();
         String actionType = "";
         String action = "";
-        String way ="";
-        if ("ok".equalsIgnoreCase(content)) {
-            actionType = "ChgBaseDiff";
+        String way = "";
+        if (content.startsWith("ok") || content.startsWith("OK")) {
+            // 修改比价的基础价格
+            actionType = "ChgInitPrice";
             action = content;
-            way ="ok";
+            way = "ok";
         } else if ("zx".equalsIgnoreCase(content) || "#".equals(content)) {
             actionType = "SinaStock";
             action = getStocksListStr(fromUserName);
-            way ="zx";
+            way = "zx";
         } else if ("all".equalsIgnoreCase(content) || "##".equalsIgnoreCase(content)) {
             actionType = "SinaStock";
             action = getStocksListStr();
-            way ="all";
+            way = "all";
         } else if (".#".equals(content) || ("-#".equals(content))) {
             actionType = "DelAllStock";
             action = content;
-            way =".#";
+            way = ".#";
         } else if (content.length() == 6) {// 长度为6 解析为stocks
             String stockCode = processStockCode(content);
             if (stockCode.contains("s_sh") || stockCode.contains("s_sz")) {
@@ -241,7 +253,7 @@ public class StocksService {
 
         resMap.put("actionType", actionType);
         resMap.put("action", action);
-        resMap.put("way",way);
+        resMap.put("way", way);
         log.info("解析用户消息:[{}],解析结果:[{}]", content, resMap);
         return resMap;
     }
@@ -255,51 +267,51 @@ public class StocksService {
         // 消息类型
         String msgType = requestMap.get("MsgType");
 
-        String Content = "";
+        String content = "";
         if (MessageUtil.REQ_MESSAGE_TYPE_EVENT.equals(msgType)) {
             // 自定义菜单事件
             //EventKey=#, Event=click;
             String eventType = MapUtils.getString(requestMap, "Event");
             if (MessageUtil.EVENT_TYPE_CLICK.equals(eventType)) {
-                String EventKey = MapUtils.getString(requestMap, "EventKey");
+                String eventKey = MapUtils.getString(requestMap, "EventKey");
 
-                Content = EventKey;
+                content = eventKey;
             }
 
         } else if (msgType.equals(MessageUtil.REQ_MESSAGE_TYPE_TEXT)) {
-            Content = requestMap.get("Content");
-            log.info("文本内容：" + Content);
+            content = requestMap.get("Content");
+            log.info("文本内容：" + content);
         }
 
-        if("".equals(Content)){
+        if ("".equals(content)) {
             log.info("用户内容不进行解析~~~~~~~~~~~~~");
             return "";
         }
 
         log.info("消息处理：fromUserName:" + fromUserName + ",toUserName:" + toUserName + ",msgType:" + msgType
-                + "Content:" + Content);
+                + "Content:" + content);
         StringBuilder respContent = new StringBuilder();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         respContent.append(sdf.format(new Date()));
         respContent.append("\n");
-        Map<String, String> actionMap = getActionMap(Content,  fromUserName);
+        Map<String, String> actionMap = getActionMap(content, fromUserName);
         String action = actionMap.get("action");
         String actionType = actionMap.get("actionType");
         // 股票代码处理
-        if (actionType == "" || actionType == null || action == null || action == "") {
+        if (StringUtils.isBlank(actionType) || StringUtils.isBlank(action)) {
             respContent.append("未能解析发送内容");
         } else if ("Message".equals(actionType)) {
-            respContent.append(messageMap.get(action));
+            respContent.append(MESSAGE_MAP.get(action));
         } else if ("SinaStock".equals(actionType)) {
-            respContent.append(ProcessStocks(action));
+            respContent.append(processStocks(action));
         } else if ("AddStock".equals(actionType)) {
             respContent.append(addCodeByUser(action, fromUserName, toUserName));
         } else if ("DelStock".equals(actionType)) {
             respContent.append(delCodeByUser(action, fromUserName, toUserName));
         } else if ("DelAllStock".equals(actionType)) {
             respContent.append(delAllByUser(action, fromUserName, toUserName));
-        } else if ("ChgBaseDiff".equals(actionType)) {
-            respContent.append(chgBaseDiffByUser(action, fromUserName, toUserName));
+        } else if ("ChgInitPrice".equals(actionType)) {
+            respContent.append(ChgInitPrice(action, fromUserName, toUserName));
         }
 
         return respContent.toString();

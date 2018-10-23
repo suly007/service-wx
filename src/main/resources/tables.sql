@@ -11,7 +11,7 @@
  Target Server Version : 50641
  File Encoding         : 65001
 
- Date: 22/10/2018 16:59:32
+ Date: 23/10/2018 12:51:20
 */
 
 SET NAMES utf8mb4;
@@ -26,12 +26,13 @@ CREATE TABLE `stocks_list`  (
   `open_id` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '微信号ID',
   `stocks_code` varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '编码',
   `stocks_alias` varchar(30) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '别名',
+  `stocks_price_init` double(16, 8) NOT NULL DEFAULT 0.00000000 COMMENT '初始价格',
   `stocks_code_comp` varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '对比编码',
   `stocks_alias_comp` varchar(30) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '对比别名',
+  `stocks_price_init_comp` double(16, 8) NOT NULL DEFAULT 0.00000000 COMMENT '初始价格-对比',
   `base_multiple` int(2) NOT NULL DEFAULT 1 COMMENT '倍数',
-  `base_diff` double(16, 8) DEFAULT NULL COMMENT '初始差',
+  `diff_warn_process_flag` char(1) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '处理状态',
   `diff_warn_time` datetime(0) DEFAULT NULL COMMENT '上次预警时间(对比)',
-  `next_base_diff` double(16, 8) DEFAULT NULL COMMENT '下次初始差',
   `diff_range` double(16, 8) DEFAULT NULL COMMENT '变动范围',
   `change_min` double(16, 8) DEFAULT -2.00000000 COMMENT '小值',
   `change_max` double(16, 8) DEFAULT 2.00000000 COMMENT '大值',
@@ -39,7 +40,7 @@ CREATE TABLE `stocks_list`  (
   `modify_date` datetime(0) DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '修改时间',
   `appid` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '公众号ID',
   PRIMARY KEY (`stocks_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '自选信息表' ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '自选信息表' ROW_FORMAT = Compact;
 
 -- ----------------------------
 -- Table structure for weixin_blacklist
@@ -63,7 +64,7 @@ CREATE TABLE `weixin_message`  (
   `send_time` datetime(0) DEFAULT NULL COMMENT '发送时间',
   `add_date` datetime(0) DEFAULT NULL COMMENT '添加时间',
   PRIMARY KEY (`message_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 69 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 352 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
 
 -- ----------------------------
 -- Table structure for weixin_token
@@ -78,6 +79,6 @@ CREATE TABLE `weixin_token`  (
   `expiresdate` datetime(0) DEFAULT NULL COMMENT '超时时间',
   `add_date` datetime(0) DEFAULT CURRENT_TIMESTAMP COMMENT '获取时间',
   PRIMARY KEY (`token_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '微信access_token信息' ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '微信access_token信息' ROW_FORMAT = Compact;
 
 SET FOREIGN_KEY_CHECKS = 1;

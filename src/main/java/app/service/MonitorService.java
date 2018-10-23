@@ -23,14 +23,17 @@ import java.util.Map;
  */
 @Service
 @Slf4j
-public class MonitorService{
+public class MonitorService {
 
-    // 企业号Id
+    /**
+     *   企业号Id
+     */
     private String corpId;
 
-    // 程序agentId
+    /**
+     *  程序agentId
+     */
     private String agentId;
-
 
 
     private DataService dataService;
@@ -46,15 +49,16 @@ public class MonitorService{
 
 
     @Autowired
-    public MonitorService(@Value("${qywx.corpId}") String corpId, @Value("${qywx.zabbix.agentId}") String agentId,MessageService messageService, DataService dataService, SimpleDateFormat simpleDateFormat) {
-        this.messageService =messageService;
+    public MonitorService(@Value("${qywx.corpId}") String corpId, @Value("${qywx.zabbix.agentId}") String agentId,
+                          MessageService messageService, DataService dataService, SimpleDateFormat simpleDateFormat) {
+        this.messageService = messageService;
         this.dataService = dataService;
         this.simpleDateFormat = simpleDateFormat;
         this.corpId = corpId;
         this.agentId = agentId;
         stockMapListChg = dataService.getStockMapListByCorpIdChg(corpId);
         stockMapListComp = dataService.getStockMapListByCorpIdComp(corpId);
-        blackMapList=dataService.getBlackList();
+        blackMapList = dataService.getBlackList();
         stockListStr = dataService.getStockListStr();
     }
 
@@ -70,7 +74,6 @@ public class MonitorService{
     }
 
     public Map<String, Stocks> getCurrentInfo(String strUrl) {
-//		System.out.println("发送请求地址："+strUrl);
         Map<String, Stocks> resultMap = new HashMap<String, Stocks>();
         StringBuilder contentBuf = new StringBuilder();
         try {
@@ -88,16 +91,13 @@ public class MonitorService{
         } catch (Exception e) {
             System.out.println("链接异常");
         }
-//		System.out.println("contentBuf"+contentBuf);
         String[] results = contentBuf.toString().split(";");
         for (int i = 0; i < results.length; i++) {
             Stocks stocks = new Stocks();
             String[] keyValue = results[i].split("=");
             String key = keyValue[0].replace("var hq_str_", "");
-            String valuestr = keyValue[1].replace("\"", "");
-//			System.out.println("valuestr:"+valuestr);
-            String[] values = valuestr.split(",");
-//			System.out.println("values:长度"+values.length);
+            String valueStr = keyValue[1].replace("\"", "");
+            String[] values = valueStr.split(",");
             stocks.setName(values[0]);
             stocks.setPrice(Double.valueOf(values[1]));
             stocks.setChgPrice(Double.valueOf(values[2]));
@@ -112,7 +112,7 @@ public class MonitorService{
         return resultMap;
 
     }
-	//删除黑名
+    //删除黑名
 //	public void delBlack(){
 //		for(int i=0;i<blackMapList.size();i++){
 //			String open_id=blackMapList.get(i).get("open_id");
@@ -128,7 +128,7 @@ public class MonitorService{
         blackMapList.clear();
         stockMapListChg = dataService.getStockMapListByCorpIdChg(corpId);
         stockMapListComp = dataService.getStockMapListByCorpIdComp(corpId);
-        blackMapList=dataService.getBlackList();
+        blackMapList = dataService.getBlackList();
         stockListStr = dataService.getStockListStr();
         if (stockListStr == null || stockListStr.length() <= 0) {
             flag = false;
@@ -155,13 +155,13 @@ public class MonitorService{
             if (stocks.getChgPercent() < changeMin) {
                 // 发送跌幅提示
                 log.info("change_min.warn.............");
-                sendChgMessage(stocks,openId,"-");
+                sendChgMessage(stocks, openId, "-");
                 break;//中断
             }
             if (stocks.getChgPercent() > changeMax) {
                 // 发送涨幅提示
                 log.info("change_max.warn.............");
-                sendChgMessage(stocks,openId,"+");
+                sendChgMessage(stocks, openId, "+");
                 break;//中断
             }
         }
@@ -169,19 +169,20 @@ public class MonitorService{
 
     /**
      * 发生涨跌幅预警消息
-     * @param stocks    股票信息
-     * @param openId    微信账号
-     * @param flag      涨跌标识
+     *
+     * @param stocks 股票信息
+     * @param openId 微信账号
+     * @param flag   涨跌标识
      */
-    private void sendChgMessage(Stocks stocks,String openId,String flag ){
-        String stocksCode =stocks.getAlias().replace("s_","");
+    private void sendChgMessage(Stocks stocks, String openId, String flag) {
+        String stocksCode = stocks.getAlias().replace("s_", "");
         StringBuilder msg = new StringBuilder();
         msg.append(simpleDateFormat.format(new Date()));
         msg.append("\n");
         msg.append(stocks.getName());
-        if("+".equals(flag)){
+        if ("+".equals(flag)) {
             msg.append("上涨提示,\n涨幅:");
-        }else{
+        } else {
             msg.append("下跌提示,\n涨幅:");
         }
         double chgPercent = stocks.getChgPercent();
@@ -205,7 +206,7 @@ public class MonitorService{
         msg.append(stocksCode);
         msg.append(".gif\" > 月K</a>");
 
-        messageService.sendMessage(agentId,openId,msg.toString(),true);
+        messageService.sendMessage(agentId, openId, msg.toString(), true);
         if (dataService.updateChange(stocks.getId(), flag) && reLoadList()) {
             System.out.println("data process success....");
         } else {
@@ -217,7 +218,7 @@ public class MonitorService{
     /**
      * 对比处理
      *
-     * @param currentInfo   当前行情信息
+     * @param currentInfo 当前行情信息
      */
     public void processComp(Map<String, Stocks> currentInfo) {
         for (int i = 0; i < stockMapListComp.size(); i++) {
@@ -236,32 +237,35 @@ public class MonitorService{
                 continue;
             }
             // 差异提示处理
-            double baseDiff = MapUtils.getDouble(stockMap, "base_diff");
-            double diffRange = MapUtils.getDouble(stockMap, "diff_range");
-            double baseMultiple = MapUtils.getDouble(stockMap, "base_multiple");
             boolean diffWarnFlag = true;
-            Date diffWarnTime = null;
-            diffWarnTime = (Date) MapUtils.getObject(stockMap, "diff_warn_time");
-            long minutes = (System.currentTimeMillis() - diffWarnTime.getTime()) / (1000 * 60);
+            //Date diffWarnTime = (Date) MapUtils.getObject(stockMap, "diff_warn_time");
+            // long minutes = (System.currentTimeMillis() - diffWarnTime.getTime()) / (1000 * 60);
             // 小于5分钟不进行差异提示
-            if (minutes < 5) {
+            //if (minutes < 5) {
+            //    diffWarnFlag = false;
+            //}
+
+            String diffWarnProcessFlag = MapUtils.getString(stockMap, "diff_warn_process_flag");
+            // 预警未处理不再提示
+            if ("N".equals(diffWarnProcessFlag)) {
                 diffWarnFlag = false;
             }
             if (diffWarnFlag && stocksComp != null) {
                 double stocksPrice = stocks.getPrice();
                 double stocksPriceComp = stocksComp.getPrice();
-
-
-                if (stocksPrice > 0 && stocksPriceComp > 0) {
-                    double realDiff = getRealDiff(stocksPrice,stocksPriceComp,baseMultiple);
+                double priceInit = MapUtils.getDouble(stockMap, "stocks_price_init");
+                double priceInitComp = MapUtils.getDouble(stockMap, "stocks_price_init_comp");
+                if (stocksPrice > 0 && stocksPriceComp > 0 && priceInit > 0 && priceInitComp > 0) {
+                    double baseMultiple = MapUtils.getDouble(stockMap, "base_multiple");
+                    double baseDiff = getDiff(priceInit, priceInitComp, baseMultiple);
+                    double realDiff = getDiff(stocksPrice, stocksPriceComp, baseMultiple);
+                    double diffRange = MapUtils.getDouble(stockMap, "diff_range");
                     if (realDiff > (baseDiff + diffRange)) {
-                        // 提示
                         log.info("up.warn.............");
                         sendCompMessage(realDiff, stocks, stocksComp, openId, "+");
                         break;
                     }
                     if (realDiff < (baseDiff - diffRange)) {
-                        // 提示
                         log.info("down.warn.............");
                         sendCompMessage(realDiff, stocks, stocksComp, openId, "-");
                         break;
@@ -274,15 +278,15 @@ public class MonitorService{
     /**
      * 发送对比预警消息
      *
-     * @param realDiff      当前差异
-     * @param stocks        股票信息
-     * @param stocksComp    对比股票信息
-     * @param openId        用户
-     * @param flag          涨跌标识
+     * @param realDiff   当前差异
+     * @param stocks     股票信息
+     * @param stocksComp 对比股票信息
+     * @param openId     用户
+     * @param flag       涨跌标识
      */
     private void sendCompMessage(double realDiff, Stocks stocks, Stocks stocksComp, String openId, String flag) {
-        String stocksCode =stocks.getAlias().replace("s_","");
-        String stocksCompCode =stocksComp.getAlias().replace("s_","");
+        String stocksCode = stocks.getAlias().replace("s_", "");
+        String stocksCompCode = stocksComp.getAlias().replace("s_", "");
         StringBuilder msg = new StringBuilder();
         msg.append(simpleDateFormat.format(new Date()));
         msg.append("\n");
@@ -311,8 +315,8 @@ public class MonitorService{
         msg.append(",");
         msg.append(stocksComp.getChgPercent());
         msg.append("% \n");
-        messageService.sendMessage(agentId,openId,msg.toString(),true);
-        if (dataService.updateDiffWarnTime(stocks.getId(), flag) && reLoadList()) {
+        messageService.sendMessage(agentId, openId, msg.toString(), true);
+        if (dataService.updateDiffWarnTime(stocks.getId()) && reLoadList()) {
             System.out.println("data process success....");
         } else {
             System.out.println("data process failed....");
@@ -322,11 +326,11 @@ public class MonitorService{
     /**
      * 获取价格差异
      *
-     * @param price1    价格1
-     * @param price2    价格2
-     * @param multiple  倍数
+     * @param price1   价格1
+     * @param price2   价格2
+     * @param multiple 倍数
      */
-    private double getRealDiff(double price1, double price2, double multiple) {
+    private double getDiff(double price1, double price2, double multiple) {
         // 倍数处理
         if (price1 / price2 > 2 || price2 / price1 > 2) {
             // 相差2倍以上,则启用倍数调整
@@ -338,6 +342,6 @@ public class MonitorService{
         }
         // 2倍差值/价格和
         return 2 * (price1 - price2) / (price1 + price2) * 100;
-
     }
+
 }
