@@ -33,7 +33,7 @@ public class StocksService {
         this.monitorService = monitorService;
     }
 
-    private static final  Map<String, String> MESSAGE_MAP = new HashMap<String, String>();
+    private static final Map<String, String> MESSAGE_MAP = new HashMap<String, String>();
 
     static {
         MESSAGE_MAP.put("ErrorStock", "股票代码错误!");
@@ -54,11 +54,15 @@ public class StocksService {
         try {
             content = content.toLowerCase().replace("ok", "");
             String[] prices = content.split("/");
-            double priceInit = Double.valueOf(prices[0]);
-            double priceInitComp = Double.valueOf(prices[1]);
-
-            int count = dataService.chgInitPriceByUser(openId, appId, priceInit, priceInitComp);
-            result = "+" + count + "操作成功!" + priceInit + "/" + priceInitComp;
+            if (prices.length == 2) {
+                double priceInit = Double.valueOf(prices[0]);
+                double priceInitComp = Double.valueOf(prices[1]);
+                int count = dataService.chgInitPriceByUser(openId, appId, priceInit, priceInitComp);
+                result = "+" + count + "操作成功!" + priceInit + "/" + priceInitComp;
+            } else {
+                int count = dataService.chgInitPriceByUser(openId, appId);
+                result = "+" + count + "操作成功!";
+            }
         } catch (Exception e) {
             log.error("ChgInitPrice发生异常,content:{},openId:{},appId:{}", content, openId, appId);
             result = e.getMessage();
