@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 
@@ -59,9 +60,9 @@ public class MonitorTask {
                 dataService.initData();
                 dataService.delData();
                 times = 0;
-                log.info("休眠10分钟");
+                log.info("休眠15分钟");
                 // 休眠10分钟
-                Thread.sleep(1000 * 60 * 10);
+                Thread.sleep(1500 * 60 * 10);
 
             } catch (InterruptedException e) {
                 log.error("中断异常", e);
@@ -73,8 +74,6 @@ public class MonitorTask {
 
     /**
      * 是否开盘时间
-     *
-     * @return
      */
     private boolean isOpen() {
 
@@ -82,11 +81,9 @@ public class MonitorTask {
         double end = 15.0;
 
         double now = Double.valueOf(simpleDateFormat.format(new Date()));
+        int day = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
+        // 时间介于9-15并且非周六和周日
+        return now > begin && now < end && day != 7 && day != 1;
 
-        if (now > begin && now < end) {
-            return true;
-        }
-
-        return false;
     }
 }
