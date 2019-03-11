@@ -19,19 +19,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author: Huanqd@2018-10-19 14:41
+ * @author : Huanqd@2018-10-19 14:41
  */
 @Service
 @Slf4j
 public class MonitorService {
 
     /**
-     *   企业号Id
+     * 企业号Id
      */
     private String corpId;
 
     /**
-     *  程序agentId
+     * 程序agentId
      */
     private String agentId;
 
@@ -64,16 +64,14 @@ public class MonitorService {
 
 
     public Map<String, Stocks> getAllCurrentInfo() {
-        StringBuilder url = new StringBuilder();
-        url.append("http://hq.sinajs.cn/");
-        url.append("rn=");
-        url.append(RandomUtils.nextLong());
-        url.append("&list=");
-        url.append(stockListStr);
-        return getCurrentInfo(url.toString());
+        String url = "http://hq.sinajs.cn/rn=" +
+                RandomUtils.nextLong() +
+                "&list=" +
+                stockListStr;
+        return getCurrentInfo(url);
     }
 
-    public Map<String, Stocks> getCurrentInfo(String strUrl) {
+    Map<String, Stocks> getCurrentInfo(String strUrl) {
         Map<String, Stocks> resultMap = new HashMap<String, Stocks>();
         StringBuilder contentBuf = new StringBuilder();
         try {
@@ -92,21 +90,27 @@ public class MonitorService {
             System.out.println("链接异常");
         }
         String[] results = contentBuf.toString().split(";");
-        for (int i = 0; i < results.length; i++) {
+        for (String result : results) {
             Stocks stocks = new Stocks();
-            String[] keyValue = results[i].split("=");
+            String[] keyValue = result.split("=");
             String key = keyValue[0].replace("var hq_str_", "");
             String valueStr = keyValue[1].replace("\"", "");
             String[] values = valueStr.split(",");
-            stocks.setName(values[0]);
-            stocks.setPrice(Double.valueOf(values[1]));
-            stocks.setChgPrice(Double.valueOf(values[2]));
-            stocks.setChgPercent(Double.valueOf(values[3]));
-            stocks.setCount(Double.valueOf(values[4]));
-            stocks.setMoney(Double.valueOf(values[5]));
-            stocks.setCode(key.replace("s_sh", "").replace("s_sz", ""));
-            stocks.setAlias(key);
-            resultMap.put(key, stocks);
+            if (values.length >= 6) {
+                stocks.setName(values[0]);
+                // 保留两位小数,上证4位..
+                stocks.setPrice((double) Math.round(Double.valueOf(values[1]) * 100) / 100);
+                stocks.setChgPrice(Double.valueOf(values[2]));
+                stocks.setChgPercent(Double.valueOf(values[3]));
+                stocks.setCount(Double.valueOf(values[4]));
+                stocks.setMoney(Double.valueOf(values[5]));
+                stocks.setCode(key.replace("s_sh", "").replace("s_sz", ""));
+                stocks.setAlias(key);
+                resultMap.put(key, stocks);
+            } else {
+                log.warn("sina返回信息:{},无法解析", valueStr);
+            }
+
         }
 
         return resultMap;
@@ -142,9 +146,8 @@ public class MonitorService {
      * @param currentInfo 当前行情信息
      */
     public void processChg(Map<String, Stocks> currentInfo) {
-        for (int i = 0; i < stockMapListChg.size(); i++) {
+        for (Map<String, Object> stockMap : stockMapListChg) {
 
-            Map<String, Object> stockMap = stockMapListChg.get(i);
             int stocksId = MapUtils.getInteger(stockMap, "stocks_id");
             String stocksAlias = MapUtils.getString(stockMap, "stocks_alias");
             double changeMin = MapUtils.getDouble(stockMap, "change_min");
@@ -221,9 +224,8 @@ public class MonitorService {
      * @param currentInfo 当前行情信息
      */
     public void processComp(Map<String, Stocks> currentInfo) {
-        for (int i = 0; i < stockMapListComp.size(); i++) {
+        for (Map<String, Object> stockMap : stockMapListComp) {
 
-            Map<String, Object> stockMap = stockMapListComp.get(i);
             int stocksId = MapUtils.getInteger(stockMap, "stocks_id");
             String stocksAlias = MapUtils.getString(stockMap, "stocks_alias");
             String stocksAliasComp = MapUtils.getString(stockMap, "stocks_alias_comp");
@@ -250,7 +252,7 @@ public class MonitorService {
             if ("N".equals(diffWarnProcessFlag)) {
                 diffWarnFlag = false;
             }
-            if (diffWarnFlag && stocksComp != null) {
+            if (diffWarnFlag) {
                 double stocksPrice = stocks.getPrice();
                 double stocksPriceComp = stocksComp.getPrice();
                 double priceInit = MapUtils.getDouble(stockMap, "stocks_price_init");
@@ -262,12 +264,22 @@ public class MonitorService {
                     double diffRange = MapUtils.getDouble(stockMap, "diff_range");
                     if (realDiff > (baseDiff + diffRange)) {
                         log.info("up.warn.............");
-                        sendCompMessage(realDiff, stocks, stocksComp, openId, "+");
+                        // 当前差异大于1时,差异变大说明stocks上涨,所以...
+                        if (realDiff > 1) {
+                            sendCompMessage(realDiff, stocks, stocksComp, openId, "+");
+                        } else {
+                            sendCompMessage(realDiff, stocks, stocksComp, openId, "+");
+                        }
                         break;
                     }
                     if (realDiff < (baseDiff - diffRange)) {
                         log.info("down.warn.............");
-                        sendCompMessage(realDiff, stocks, stocksComp, openId, "-");
+                        // 当前差异大于1时,差异变小说明stocks下跌,所以...
+                        if (realDiff > 1) {
+                            sendCompMessage(realDiff, stocks, stocksComp, openId, "-");
+                        } else {
+                            sendCompMessage(realDiff, stocks, stocksComp, openId, "-");
+                        }
                         break;
                     }
                 }
@@ -287,35 +299,34 @@ public class MonitorService {
     private void sendCompMessage(double realDiff, Stocks stocks, Stocks stocksComp, String openId, String flag) {
         String stocksCode = stocks.getAlias().replace("s_", "");
         String stocksCompCode = stocksComp.getAlias().replace("s_", "");
-        StringBuilder msg = new StringBuilder();
-        msg.append(simpleDateFormat.format(new Date()));
-        msg.append("\n");
-        msg.append("差异:");
-        msg.append(df.format(realDiff));
-        msg.append("%\n");
-        msg.append("卖出:");
-        msg.append(" <a href=\"http://image.sinajs.cn/newchart/min/n/");
-        msg.append(stocksCode);
-        msg.append(".gif\" >");
         //msg.append(stocks.getCode());
-        msg.append(stocks.getName());
-        msg.append("</a>");
-        msg.append(stocks.getPrice());
-        msg.append(",");
-        msg.append(stocks.getChgPercent());
-        msg.append("%\n");
-        msg.append("买入:");
-        msg.append(" <a href=\"http://image.sinajs.cn/newchart/min/n/");
-        msg.append(stocksCompCode);
-        msg.append(".gif\" >");
         //msg.append(stocks_comp.getCode());
-        msg.append(stocksComp.getName());
-        msg.append("</a>");
-        msg.append(stocksComp.getPrice());
-        msg.append(",");
-        msg.append(stocksComp.getChgPercent());
-        msg.append("% \n");
-        messageService.sendMessage(agentId, openId, msg.toString(), true);
+        String msg = simpleDateFormat.format(new Date()) +
+                "\n" +
+                "差异:" +
+                df.format(realDiff) +
+                "%\n" +
+                "卖出:" +
+                " <a href=\"http://image.sinajs.cn/newchart/min/n/" +
+                stocksCode +
+                ".gif\" >" +
+                stocks.getName() +
+                "</a>" +
+                stocks.getPrice() +
+                "," +
+                stocks.getChgPercent() +
+                "%\n" +
+                "买入:" +
+                " <a href=\"http://image.sinajs.cn/newchart/min/n/" +
+                stocksCompCode +
+                ".gif\" >" +
+                stocksComp.getName() +
+                "</a>" +
+                stocksComp.getPrice() +
+                "," +
+                stocksComp.getChgPercent() +
+                "% \n";
+        messageService.sendMessage(agentId, openId, msg, true);
         if (dataService.updateDiffWarnTime(stocks.getId()) && reLoadList()) {
             System.out.println("data process success....");
         } else {

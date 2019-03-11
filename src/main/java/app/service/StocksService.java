@@ -285,8 +285,8 @@ public class StocksService {
         } else if ("zs".equalsIgnoreCase(content) || "###".equalsIgnoreCase(content)) {
             // 指数
             actionType = "SinaStock";
-            // sz000001 上证,sz399006 创业,sz399001 深成
-            action = "sz000001,sz399006,sz399001";
+            // s_sh000001 上证,s_sz399006 创业,s_sz399001 深成
+            action = "s_sh000001,s_sz399001,s_sz399006";
             way = "zs";
         } else if (".#".equals(content) || ("-#".equals(content))) {
             actionType = "DelAllStock";
