@@ -65,6 +65,18 @@ public class DataService {
         return jdbcTemplate.update(sql, priceInit, priceInitComp, open_id, appId);
     }
 
+    /**
+     * 修改比价初始价格,并将预警处理状态改为已处理
+     *
+     * @param open_id           微信号
+     * @param appId             企业号
+     * @return
+     */
+    public int chgInitPriceByUser(String open_id, String appId) {
+        String sql = "update stocks_list set diff_warn_process_flag='Y'  where open_id=? and appid=? and  diff_warn_process_flag='N'";
+        return jdbcTemplate.update(sql, open_id, appId);
+    }
+
     public boolean updateChange(int stocks_id, String flag) {
         String sql = "update stocks_list set change_min=(change_min" + flag + "2),change_max=(change_max" + flag + "2) where stocks_id=? ";
         return jdbcTemplate.update(sql, stocks_id) > 0;
