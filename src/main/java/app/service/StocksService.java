@@ -81,35 +81,41 @@ public class StocksService {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         respContent.append(sdf.format(new Date()));
         respContent.append("\n");
-        Map<String, String> actionMap = getActionMap(content, fromUserName);
-        String action = actionMap.get("action");
-        String actionType = MapUtils.getString(actionMap, "actionType", "BLANK");
 
-        switch (actionType) {
-            case "SinaStock":
-                // 新浪接口调用
-                respContent.append(processStocks(action));
-                break;
-            case "AddStock":
-                // 添加自选
-                respContent.append(addCodeByUser(action, fromUserName, toUserName));
-                break;
-            case "DelStock":
-                // 删除自选
-                respContent.append(delCodeByUser(action, fromUserName, toUserName));
-                break;
-            case "DelAllStock":
-                // 删除全部自选
-                respContent.append(delAllByUser(action, fromUserName, toUserName));
-                break;
-            case "ChgInitPrice":
-                // 修改对比初始价格
-                respContent.append(chgInitPrice(action, fromUserName, toUserName));
-                break;
-            default:
-                respContent.append(MESSAGE_MAP.get(action));;
+        try {
+            Map<String, String> actionMap = getActionMap(content, fromUserName);
+            String action = actionMap.get("action");
+            String actionType = MapUtils.getString(actionMap, "actionType", "BLANK");
+
+            switch (actionType) {
+                case "SinaStock":
+                    // 新浪接口调用
+                    respContent.append(processStocks(action));
+                    break;
+                case "AddStock":
+                    // 添加自选
+                    respContent.append(addCodeByUser(action, fromUserName, toUserName));
+                    break;
+                case "DelStock":
+                    // 删除自选
+                    respContent.append(delCodeByUser(action, fromUserName, toUserName));
+                    break;
+                case "DelAllStock":
+                    // 删除全部自选
+                    respContent.append(delAllByUser(action, fromUserName, toUserName));
+                    break;
+                case "ChgInitPrice":
+                    // 修改对比初始价格
+                    respContent.append(chgInitPrice(action, fromUserName, toUserName));
+                    break;
+                default:
+                    respContent.append(MESSAGE_MAP.get(action));
+                    ;
+            }
+        } catch (Exception e) {
+            // 异常消息返回
+            respContent.append("异常消息:").append(e.getMessage());
         }
-
         return respContent.toString();
     }
 
@@ -252,12 +258,17 @@ public class StocksService {
     }
 
 
-    private static String processStockCode(String Content) {
+    private static String processStockCode(String content) {
+        try {
+            Integer.parseInt(content);
+        }catch (NumberFormatException ex){
+            throw new RuntimeException("股票代码必须是数字,你的输入内容是"+content);
+        }
         String stockCode = "";
-        if (Content.charAt(0) == '6') {
-            stockCode = "s_sh" + Content;
-        } else if (Content.charAt(0) == '0' || Content.charAt(0) == '3') {
-            stockCode = "s_sz" + Content;
+        if (content.charAt(0) == '6') {
+            stockCode = "s_sh" + content;
+        } else if (content.charAt(0) == '0' || content.charAt(0) == '3') {
+            stockCode = "s_sz" + content;
         }
         return stockCode;
     }
