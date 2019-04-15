@@ -204,16 +204,17 @@ public class StocksService {
                     space = "-";//"↓";
                     percentStr = String.valueOf(percent);
                 }
+                /* 去除超链接
                 respContent.append(" <a href=\"http://image.sinajs.cn/newchart/min/n/");
                 respContent.append(key.replace("s_", ""));
-                respContent.append(".gif\" >");
+                respContent.append(".gif\" >");*/
                 String name = s.getName().replace(" ", "");
                 for (int i = 0; i < 8 - name.getBytes().length; i++) {
                     respContent.append(space);
                 }
                 respContent.append(name);
 
-                respContent.append("</a>");
+                /*respContent.append("</a>");*/
                 String price = String.valueOf(s.getPrice());
                 respContent.append("  ");
                 respContent.append(s.getPrice());
