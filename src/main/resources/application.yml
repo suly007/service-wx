@@ -8,6 +8,8 @@ spring:
       maximum-pool-size: 15
   profiles:
     active: dev
+  thymeleaf:
+    cache: false
 
 weixin:
   appid: wx7175f9658e1378e3

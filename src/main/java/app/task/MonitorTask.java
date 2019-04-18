@@ -10,9 +10,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Map;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 类
@@ -21,7 +23,7 @@ import java.util.Map;
  */
 @Component
 @Slf4j
-@Profile({"prod"})
+@Profile({"prod","dev"})
 public class MonitorTask {
 
     @Autowired
@@ -40,6 +42,8 @@ public class MonitorTask {
     // 计数器
     private int times = 0;
 
+    private static Map<String,String> info = new HashMap<>();
+
 
     @Scheduled(fixedDelay = fixedDelay)
     private void monitor() {
@@ -55,6 +59,7 @@ public class MonitorTask {
             if (times % logOkInterval == 0) {
                 log.info(" ok.....");
             }
+            setInfo(currentInfo);
         } else {
             try {
                 dataService.initData();
@@ -71,6 +76,29 @@ public class MonitorTask {
         }
     }
 
+
+    private void setInfo(Map<String, Stocks> currentInfo) {
+        List<Stocks> tempList = new ArrayList<>();
+        currentInfo.forEach((k, v) -> {
+            tempList.add(v);
+        });
+        tempList.sort(Comparator.comparingDouble(Stocks::getChgPercent));
+        StringBuilder sb = new StringBuilder();
+        tempList.forEach((stocks -> {
+            sb.append(stocks.getName()).append("&nbsp;").append(stocks.getPrice()).append("&nbsp;")
+                    .append(stocks.getChgPercent() >= 0 ? "+" + stocks.getChgPercent() : stocks.getChgPercent())
+                    .append("%<br/>");
+        }));
+        info.put("value", sb.toString());
+        info.put("time", LocalTime.now().toString());
+    }
+
+    /**
+     * 获取最新数据
+     */
+    public static Map<String,String> getInfo() {
+        return info;
+    }
 
     /**
      * 是否开盘时间

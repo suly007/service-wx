@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="">
+<head>
+    <meta charset="UTF-8">
+    <title>SmartSearch Realtime Pv</title>
+    <meta name="generator"
+          content="HTML Tidy for HTML5 (experimental) for Windows https://github.com/w3c/tidy-html5/tree/c63cc39" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=100%, initial-scale=2.0, user-scalable=yes" />
+    <meta charset="utf-8">
+    <!-- 引入 ECharts 文件 -->
+    <script src="/jquery/jquery-3.3.1.min.js"></script>
+</head>
+<body style="height: 100%">
+<!-- 为 ECharts 准备一个具备大小（宽高）的 DOM -->
+<div id="divTime"></div>
+<div id="divValue"></div>
+</body>
+<script type="text/javascript" th:inline="JavaScript">
+
+    $(function () {
+        function refresh() {
+            $.post("getCurrentInfo", {},
+                function (values) {
+                    console.log(values)
+                    if(values &&values.time ){
+                        document.getElementById("divTime").innerHTML=values.time;
+                    }
+                    if(values&& values.value){
+                        document.getElementById("divValue").innerHTML=values.value;
+                    }else{
+                        document.getElementById("divValue").innerHTML="no data";
+                    }
+                }
+            );
+        }
+
+        refresh();
+        setInterval(refresh, 1000);
+    });
+
+</script>
+</html>
